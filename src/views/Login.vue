@@ -32,6 +32,7 @@
 
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import { Form, Field, ErrorMessage } from 'vee-validate';
 import * as yup from 'yup';
 import { login } from '../services/authService';
@@ -45,6 +46,7 @@ export default defineComponent({
     ErrorMessage,
   },
   setup() {
+    const router = useRouter();
     const schema = yup.object({
       email: yup.string().email('Email inválido').required('Email requerido'),
       password: yup.string().min(6, 'Mínimo 6 caracteres').required('Password requerido'),
@@ -65,10 +67,11 @@ export default defineComponent({
         if (result.success && result.data) {
           setToken(result.data.accessToken);
           successMessage.value = 'Login successful!';
+          router.push('/users');
         } else {
           errorMessage.value = result.message || 'Login failed';
         }
-      } catch (error) {       
+      } catch (error) {
         if (error instanceof Error) {
           errorMessage.value = error.message;
         } else {
@@ -92,8 +95,8 @@ export default defineComponent({
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.form-label {
-  text-align: left !important;
-  display: block;
+.card-header {
+  background-color: #42b883 !important;
+  color: #fff !important;
 }
 </style>
