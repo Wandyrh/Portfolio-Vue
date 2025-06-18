@@ -6,6 +6,22 @@ const routes: Array<RouteRecordRaw> = [
     name: 'Login',
     component: () => import('../views/Login.vue'),
   },
+  {
+    path: '/',
+    component: () => import('../components/MainLayout.vue'),
+    children: [
+      {
+        path: 'users',
+        name: 'Users',
+        component: () => import('../views/Users.vue'),
+      },
+      // Add more authenticated child routes here
+      {
+        path: '',
+        redirect: { name: 'Users' },
+      },
+    ],
+  },
 ];
 
 const router = createRouter({

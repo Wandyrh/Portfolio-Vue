@@ -1,0 +1,34 @@
+/* Common reusable styles for the app */
+
+.icon-user {
+  display: flex;
+  align-items: center;
+}
+
+.form-label {
+  text-align: left !important;
+  display: block;
+}
+
+.form-control {
+  border-color: #42b883 !important;
+  box-shadow: none !important;
+}
+
+.form-control:focus {
+  border-color: #368a6e !important;
+  box-shadow: 0 0 0 0.2rem rgba(66, 184, 131, 0.25) !important;
+}
+
+.btn-primary {
+  background-color: #42b883 !important;
+  border-color: #42b883 !important;
+  color: #fff !important;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+  background-color: #368a6e !important;
+  border-color: #368a6e !important;
+  color: #fff !important;
+}
