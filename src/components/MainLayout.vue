@@ -4,8 +4,8 @@
       <h1>Portfolio-Vue</h1>
       <div class="header-user-menu" ref="menuRef" @click="toggleMenu" tabindex="0">
         <svg class="header-user-icon" width="36" height="36" viewBox="0 0 20 20" fill="none">
-          <circle cx="10" cy="7" r="4" stroke="#fff" stroke-width="2" fill="none"/>
-          <path d="M3 17c0-2.7614 3.134-5 7-5s7 2.2386 7 5" stroke="#fff" stroke-width="2" fill="none"/>
+          <circle cx="10" cy="7" r="4" stroke="#fff" stroke-width="2" fill="none" />
+          <path d="M3 17c0-2.7614 3.134-5 7-5s7 2.2386 7 5" stroke="#fff" stroke-width="2" fill="none" />
         </svg>
         <div v-if="showMenu" class="user-dropdown" @click.stop>
           <button class="dropdown-item" @click="logout">Log out</button>
@@ -18,13 +18,25 @@
           <ul>
             <li>
               <router-link to="/users" class="nav-btn">
-                <span class="icon-user" aria-hidden="true">
+                <span class="icon-entity" aria-hidden="true">
                   <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                    <circle cx="10" cy="7" r="4" stroke="#42b883" stroke-width="2" fill="none"/>
-                    <path d="M3 17c0-2.7614 3.134-5 7-5s7 2.2386 7 5" stroke="#42b883" stroke-width="2" fill="none"/>
+                    <circle cx="10" cy="7" r="4" stroke="#42b883" stroke-width="2" fill="none" />
+                    <path d="M3 17c0-2.7614 3.134-5 7-5s7 2.2386 7 5" stroke="#42b883" stroke-width="2" fill="none" />
                   </svg>
                 </span>
                 <span class="sidebar-link-text">Users</span>
+              </router-link>
+            </li>
+            <li>
+              <router-link to="/product-categories" class="nav-btn">
+                <span class="icon-entity" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M3 7l7-4 7 4v6c0 3.3137-2.6863 6-6 6s-6-2.6863-6-6V7z" stroke="#42b883" stroke-width="2"
+                      fill="none" />
+                    <circle cx="10" cy="11" r="2.5" stroke="#42b883" stroke-width="2" fill="none" />
+                  </svg>
+                </span>
+                <span class="sidebar-link-text">Product Categories</span>
               </router-link>
             </li>
           </ul>
@@ -116,7 +128,7 @@ export default defineComponent({
 
 .header-user-menu:focus,
 .header-user-menu:hover {
-  background: rgba(255,255,255,0.12);
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .header-user-icon {
@@ -130,7 +142,7 @@ export default defineComponent({
   background: #fff;
   color: #222e3c;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
   min-width: 120px;
   z-index: 100;
   padding: 8px 0;
@@ -195,22 +207,6 @@ export default defineComponent({
   padding: 10px 18px;
   border-radius: 8px;
   transition: background 0.15s, color 0.15s;
-}
-
-.sidebar nav ul li a .sidebar-link-text {
-  color: #111 !important;
-  font-weight: 600;
-}
-
-.sidebar nav ul li a.router-link-exact-active,
-.sidebar nav ul li a:hover {
-  background: #e6f7f1;
-  color: #42b883;
-}
-
-.icon-user {
-  display: flex;
-  align-items: center;
 }
 
 .page-content {

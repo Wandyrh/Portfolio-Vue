@@ -15,6 +15,11 @@ const routes: Array<RouteRecordRaw> = [
         name: 'Users',
         component: () => import('../views/Users.vue'),
       },
+      {
+        path: 'product-categories',
+        name: 'ProductCategories',
+        component: () => import('../views/ProductCategories.vue'),
+      },
       // Add more authenticated child routes here
       {
         path: '',
