@@ -48,7 +48,7 @@ export async function deleteUser(id: string): Promise<ApiResult<null>> {
   return data;
 }
  
-import { PagedResult } from '../types/user';
+import { PagedResult } from '../types/api';
 
 export async function getUsersPaged(page: number, pageSize: number): Promise<ApiResult<PagedResult<UserDto>>> {
   const response = await authFetch(apiUrl + `/Users/paged?page=${page}&pageSize=${pageSize}`);
