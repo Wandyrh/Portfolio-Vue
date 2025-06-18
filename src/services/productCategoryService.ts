@@ -6,9 +6,11 @@ import { PagedResult } from '../types/api';
 
 const baseUrl = `${apiUrl}/ProductCategories`;
 
-export const getProductCategories = async (): Promise<ProductCategoryDto[]> => {
+export const getProductCategories = async (): Promise<ApiResult<ProductCategoryDto[]>> => {
   const response = await authFetch(baseUrl);
-  return await response.json();
+  const data: ApiResult<ProductCategoryDto[]> = await response.json();
+  if (!response.ok) throw new Error(data?.message || 'Network response was not ok');
+  return data;
 };
 
 export const getProductCategory = async (id: string): Promise<ProductCategoryDto> => {

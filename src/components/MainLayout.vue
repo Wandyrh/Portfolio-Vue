@@ -39,6 +39,18 @@
                 <span class="sidebar-link-text">Product Categories</span>
               </router-link>
             </li>
+            <li>
+              <router-link to="/products" class="nav-btn">
+                <span class="icon-entity" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <polygon points="2,7 10,2 18,7 10,12" stroke="#42b883" stroke-width="2" fill="none"/>
+                    <polyline points="2,7 2,15 10,18 18,15 18,7" stroke="#42b883" stroke-width="2" fill="none"/>
+                    <line x1="10" y1="12" x2="10" y2="18" stroke="#42b883" stroke-width="2"/>
+                  </svg>
+                </span>
+                <span class="sidebar-link-text">Products</span>
+              </router-link>
+            </li>
           </ul>
         </nav>
       </aside>
