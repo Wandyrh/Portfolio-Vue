@@ -2,27 +2,27 @@
   <Form :key="mode + (product && product.id ? product.id : '')" @submit="onSubmit" :validation-schema="validationSchema"
     :initial-values="initialValues" class="product-form">
     <div class="mb-3">
-      <label for="categoryId" class="form-label">Category</label>
+      <label for="categoryId" class="form-label">{{ $t('products.category') }}</label>
       <Field as="select" name="categoryId" class="form-control" id="categoryId">
-        <option value="">Select a category</option>
+        <option value="">{{ $t('products.selectCategory') }}</option>
         <option v-for="cat in categories || []" :key="cat?.id" :value="cat?.id">{{ cat?.name }}</option>
       </Field>
       <ErrorMessage name="categoryId" class="text-danger" />
     </div>
     <div class="mb-3">
-      <label for="name" class="form-label">Name</label>
+      <label for="name" class="form-label">{{ $t('products.name') }}</label>
       <Field name="name" type="text" class="form-control" id="name" />
       <ErrorMessage name="name" class="text-danger" />
     </div>
     <div class="mb-3">
-      <label for="description" class="form-label">Description</label>
+      <label for="description" class="form-label">{{ $t('products.description') }}</label>
       <Field name="description" type="text" class="form-control" id="description" />
       <ErrorMessage name="description" class="text-danger" />
     </div>
     <div class="d-flex justify-content-end gap-2 mt-4">
-      <button type="button" class="btn btn-outline-secondary" @click="$emit('cancel')">Cancel</button>
+      <button type="button" class="btn btn-outline-secondary" @click="$emit('cancel')">{{ $t('common.cancel') }}</button>
       <button type="submit" class="btn btn-success">
-        {{ mode === 'edit' ? 'Update' : 'Create' }}
+        {{ mode === 'edit' ? $t('common.update') : $t('common.create') }}
       </button>
     </div>
   </Form>
@@ -30,6 +30,7 @@
 
 <script lang="ts">
 import { defineComponent, PropType, computed, ref, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { Form, Field, ErrorMessage } from 'vee-validate';
 import * as yup from 'yup';
 import { ProductDto, CreateProductDto, UpdateProductDto } from '../types/product';
@@ -61,6 +62,7 @@ export default defineComponent({
   },
   emits: ['submit', 'cancel'],
   setup(props, { emit }) {
+    const { t } = useI18n();
     const categories = ref<ProductCategoryDto[]>([]);
 
     onMounted(async () => {
@@ -70,9 +72,9 @@ export default defineComponent({
 
     const schema = computed(() =>
       yup.object({
-        categoryId: yup.string().required('Category is required'),
-        name: yup.string().required('Name is required'),
-        description: yup.string().required('Description is required'),
+        categoryId: yup.string().required(t('products.validation.categoryRequired')),
+        name: yup.string().required(t('products.validation.nameRequired')),
+        description: yup.string().required(t('products.validation.descriptionRequired')),
       })
     );
 

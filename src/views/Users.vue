@@ -8,7 +8,7 @@
             <path d="M3 17c0-2.7614 3.134-5 7-5s7 2.2386 7 5" stroke="#42b883" stroke-width="2" fill="none" />
           </svg>
         </span>
-        Users
+        {{ $t('users.title') }}
       </h2>
       <button class="add-entity-btn" @click="openUserModal">
         <span class="icon-plus" aria-hidden="true">
@@ -17,14 +17,14 @@
             <path d="M12 8v8M8 12h8" stroke="#fff" stroke-width="2" stroke-linecap="round" />
           </svg>
         </span>
-        Add User
+        {{ $t('users.addUser') }}
       </button>
     </div>
-    <div v-if="loading">Loading...</div>
+    <div v-if="loading">{{ $t('common.loading') }}</div>
     <div v-else-if="error" class="error">{{ error }}</div>
 
     <!-- User Modal -->
-    <ConfirmDialog :show="showConfirmDialog" title="Delete User" :message="confirmMessage" @confirm="confirmDeleteUser"
+    <ConfirmDialog :show="showConfirmDialog" :title="$t('users.deleteUser')" :message="confirmMessage" @confirm="confirmDeleteUser"
       @cancel="cancelDeleteUser" />
     <div v-if="showUserModal">
       <div class="modal-backdrop fade show custom-modal-backdrop"></div>
@@ -33,7 +33,7 @@
           <div class="modal-content">
             <div class="modal-header">
               <h5 class="modal-title">
-                {{ userModalMode === 'edit' ? 'Edit User' : 'Add User' }}
+                {{ userModalMode === 'edit' ? $t('users.editUser') : $t('users.addUser') }}
               </h5>
               <button type="button" class="btn-close" @click="closeUserModal"></button>
             </div>
@@ -63,11 +63,11 @@
           <table class="table table-hover align-middle entity-table">
             <thead>
               <tr>
-                <th scope="col"><span class="th-bg">First Name</span></th>
-                <th scope="col"><span class="th-bg">Last Name</span></th>
-                <th scope="col"><span class="th-bg">Email</span></th>
-                <th scope="col"><span class="th-bg">Phone</span></th>
-                <th scope="col"><span class="th-bg">Actions</span></th>
+                <th scope="col"><span class="th-bg">{{ $t('users.firstName') }}</span></th>
+                <th scope="col"><span class="th-bg">{{ $t('users.lastName') }}</span></th>
+                <th scope="col"><span class="th-bg">{{ $t('users.email') }}</span></th>
+                <th scope="col"><span class="th-bg">{{ $t('users.phone') }}</span></th>
+                <th scope="col"><span class="th-bg">{{ $t('common.actions') }}</span></th>
               </tr>
             </thead>
             <tbody>
@@ -77,7 +77,7 @@
                 <td>{{ user.email }}</td>
                 <td>{{ user.phone }}</td>
                 <td class="actions-cell">
-                  <button class="action-btn" title="Edit" @click="openEditUserModal(user)">
+                  <button class="action-btn" :title="$t('common.edit')" @click="openEditUserModal(user)">
                     <svg width="24" height="24" viewBox="0 0 20 20" fill="none">
                       <path d="M4 13.5V16h2.5l7.06-7.06-2.5-2.5L4 13.5z" stroke="#42b883" stroke-width="1.5"
                         fill="none" />
@@ -85,7 +85,7 @@
                         stroke-width="1.5" fill="none" />
                     </svg>
                   </button>
-                  <button class="action-btn" title="Delete" @click="showDeleteConfirm(user)">
+                  <button class="action-btn" :title="$t('common.delete')" @click="showDeleteConfirm(user)">
                     <svg width="24" height="24" viewBox="0 0 20 20" fill="none">
                       <path d="M6 7v7a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V7" stroke="#e74c3c" stroke-width="1.5"
                         fill="none" />
@@ -99,9 +99,9 @@
           </table>
         </div>
         <div class="pagination" v-if="pagedResult">
-          <button :disabled="page === 1" @click="goToPage(page - 1)">Prev</button>
-          <span>Page {{ page }} of {{ pagedResult.totalPages }}</span>
-          <button :disabled="page === pagedResult.totalPages" @click="goToPage(page + 1)">Next</button>
+          <button :disabled="page === 1" @click="goToPage(page - 1)">{{ $t('common.prev') }}</button>
+          <span>{{ $t('common.page') }} {{ page }} {{ $t('common.of') }} {{ pagedResult.totalPages }}</span>
+          <button :disabled="page === pagedResult.totalPages" @click="goToPage(page + 1)">{{ $t('common.next') }}</button>
         </div>
       </div>
     </template>
@@ -116,10 +116,12 @@ import { PagedResult } from '../types/api';
 import UserForm from '../components/UserForm.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import { useToast } from 'vue-toastification';
+import { useI18n } from 'vue-i18n';
 
 export default defineComponent({
   name: 'UsersView',
   setup() {
+    const { t } = useI18n();
     const pagedResult = ref<PagedResult<UserDto> | null>(null);
     const loading = ref(true);
     const error = ref<string | null>(null);
@@ -135,7 +137,7 @@ export default defineComponent({
 
     function showDeleteConfirm(user: UserDto) {
       userToDelete.value = user;
-      confirmMessage.value = `Are you sure you want to delete ${user.firstName} ${user.lastName}?`;
+      confirmMessage.value = `${t('users.confirmDelete', { name: user.firstName + ' ' + user.lastName })}`;
       showConfirmDialog.value = true;
     }
 
@@ -145,10 +147,10 @@ export default defineComponent({
         loading.value = true;
         error.value = null;
         await deleteUser(userToDelete.value.id);
-        toast.success("User deleted");
+        toast.success(t('users.deleted'));
         fetchUsers();
       } catch (e: any) {
-        error.value = e.message || 'Error deleting user';
+        error.value = e.message || t('users.errorDeleting');
       } finally {
         loading.value = false;
         showConfirmDialog.value = false;
@@ -193,11 +195,11 @@ export default defineComponent({
         loading.value = true;
         error.value = null;
         await updateUser(dto.id, dto);
-        toast.success("User updated");
+        toast.success(t('users.updated'));
         closeUserModal();
         fetchUsers();
       } catch (e: any) {
-        error.value = e.message || 'Error updating user';
+        error.value = e.message || t('users.errorUpdating');
       } finally {
         loading.value = false;
       }
@@ -208,11 +210,11 @@ export default defineComponent({
         loading.value = true;
         error.value = null;
         await createUser(dto);
-        toast.success("User created");
+        toast.success(t('users.created'));
         closeUserModal();
         fetchUsers();
       } catch (e: any) {
-        error.value = e.message || 'Error creating user';
+        error.value = e.message || t('users.errorCreating');
       } finally {
         loading.value = false;
       }
@@ -226,10 +228,10 @@ export default defineComponent({
         if (result.success && result.data) {
           pagedResult.value = result.data;
         } else {
-          error.value = result.message || 'Failed to load users';
+          error.value = result.message || t('users.failedToLoad');
         }
       } catch (e: any) {
-        error.value = e.message || 'Error loading users';
+        error.value = e.message || t('users.errorLoading');
       } finally {
         loading.value = false;
       }
@@ -237,14 +239,14 @@ export default defineComponent({
 
     async function handleDeleteUser(user: UserDto) {
       console.log('Deleting user:', user);
-      if (!confirm(`Are you sure you want to delete ${user.firstName} ${user.lastName}?`)) return;
+      if (!confirm(t('users.confirmDelete', { name: user.firstName + ' ' + user.lastName }))) return;
       try {
         loading.value = true;
         error.value = null;
         await deleteUser(user.id);
         fetchUsers();
       } catch (e: any) {
-        error.value = e.message || 'Error deleting user';
+        error.value = e.message || t('users.errorDeleting');
       } finally {
         loading.value = false;
       }

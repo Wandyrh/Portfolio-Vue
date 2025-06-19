@@ -8,7 +8,7 @@
             <circle cx="10" cy="11" r="2.5" stroke="#42b883" stroke-width="2" fill="none"/>
           </svg>
         </span>
-        Product Categories
+        {{ $t('productCategories.title') }}
       </h2>
       <button class="add-entity-btn" @click="openCategoryModal">
         <span class="icon-plus" aria-hidden="true">
@@ -17,16 +17,16 @@
             <path d="M12 8v8M8 12h8" stroke="#fff" stroke-width="2" stroke-linecap="round" />
           </svg>
         </span>
-        Add Category
+        {{ $t('productCategories.addCategory') }}
       </button>
     </div>
-    <div v-if="loading">Loading...</div>
+    <div v-if="loading">{{ $t('common.loading') }}</div>
     <div v-else-if="error" class="error">{{ error }}</div>
 
     <!-- Confirm Dialog -->
     <ConfirmDialog
       :show="showConfirmDialog"
-      title="Delete Category"
+      :title="$t('productCategories.deleteCategory')"
       :message="confirmMessage"
       @confirm="confirmDeleteCategory"
       @cancel="cancelDeleteCategory"
@@ -38,7 +38,7 @@
           <div class="modal-content">
             <div class="modal-header">
               <h5 class="modal-title">
-                {{ categoryModalMode === 'edit' ? 'Edit Category' : 'Add Category' }}
+                {{ categoryModalMode === 'edit' ? $t('productCategories.editCategory') : $t('productCategories.addCategory') }}
               </h5>
               <button type="button" class="btn-close" @click="closeCategoryModal"></button>
             </div>
@@ -68,9 +68,9 @@
           <table class="table table-hover align-middle entity-table">
             <thead>
               <tr>
-                <th scope="col"><span class="th-bg">Name</span></th>
-                <th scope="col"><span class="th-bg">Description</span></th>
-                <th scope="col"><span class="th-bg">Actions</span></th>
+                <th scope="col"><span class="th-bg">{{ $t('productCategories.name') }}</span></th>
+                <th scope="col"><span class="th-bg">{{ $t('productCategories.description') }}</span></th>
+                <th scope="col"><span class="th-bg">{{ $t('common.actions') }}</span></th>
               </tr>
             </thead>
             <tbody>
@@ -78,13 +78,13 @@
                 <td>{{ category.name }}</td>
                 <td>{{ category.description }}</td>
                 <td class="actions-cell">
-                  <button class="action-btn" title="Edit" @click="openEditCategoryModal(category)">
+                  <button class="action-btn" :title="$t('common.edit')" @click="openEditCategoryModal(category)">
                     <svg width="24" height="24" viewBox="0 0 20 20" fill="none">
                       <path d="M4 13.5V16h2.5l7.06-7.06-2.5-2.5L4 13.5z" stroke="#42b883" stroke-width="1.5" fill="none" />
                       <path d="M14.06 6.44l1.5-1.5a1.5 1.5 0 0 1 2.12 2.12l-1.5 1.5-2.12-2.12z" stroke="#42b883" stroke-width="1.5" fill="none" />
                     </svg>
                   </button>
-                  <button class="action-btn" title="Delete" @click="showDeleteConfirm(category)">
+                  <button class="action-btn" :title="$t('common.delete')" @click="showDeleteConfirm(category)">
                     <svg width="24" height="24" viewBox="0 0 20 20" fill="none">
                       <path d="M6 7v7a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V7" stroke="#e74c3c" stroke-width="1.5" fill="none" />
                       <path d="M9 10v4M11 10v4M4 7h12M8 7V5a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v2" stroke="#e74c3c" stroke-width="1.5" fill="none" />
@@ -96,9 +96,9 @@
           </table>
         </div>
         <div class="pagination" v-if="pagedResult">
-          <button :disabled="page === 1" @click="goToPage(page - 1)">Prev</button>
-          <span>Page {{ page }} of {{ pagedResult.totalPages }}</span>
-          <button :disabled="page === pagedResult.totalPages" @click="goToPage(page + 1)">Next</button>
+          <button :disabled="page === 1" @click="goToPage(page - 1)">{{ $t('common.prev') }}</button>
+          <span>{{ $t('common.page') }} {{ page }} {{ $t('common.of') }} {{ pagedResult.totalPages }}</span>
+          <button :disabled="page === pagedResult.totalPages" @click="goToPage(page + 1)">{{ $t('common.next') }}</button>
         </div>
       </div>
     </template>
@@ -107,6 +107,7 @@
 
 <script lang="ts">
 import { defineComponent, ref, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import {
   getProductCategoriesPaged,
   createProductCategory,
@@ -127,6 +128,7 @@ interface PagedResult<T> {
 export default defineComponent({
   name: 'ProductCategoriesView',
   setup() {
+    const { t } = useI18n();
     const pagedResult = ref<PagedResult<ProductCategoryDto> | null>(null);
     const loading = ref(true);
     const error = ref<string | null>(null);
@@ -142,7 +144,7 @@ export default defineComponent({
 
     function showDeleteConfirm(category: ProductCategoryDto) {
       categoryToDelete.value = category;
-      confirmMessage.value = `Are you sure you want to delete "${category.name}"?`;
+      confirmMessage.value = t('productCategories.confirmDelete', { name: category.name });
       showConfirmDialog.value = true;
     }
 
@@ -152,10 +154,10 @@ export default defineComponent({
         loading.value = true;
         error.value = null;
         await deleteProductCategory(categoryToDelete.value.id);
-        toast.success("Category deleted");
+        toast.success(t('productCategories.deleted'));
         fetchCategories();
       } catch (e: any) {
-        error.value = e.message || 'Error deleting category';
+        error.value = e.message || t('productCategories.errorDeleting');
       } finally {
         loading.value = false;
         showConfirmDialog.value = false;
@@ -200,11 +202,11 @@ export default defineComponent({
         loading.value = true;
         error.value = null;
         await updateProductCategory(dto.id, dto);
-        toast.success("Category updated");
+        toast.success(t('productCategories.updated'));
         closeCategoryModal();
         fetchCategories();
       } catch (e: any) {
-        error.value = e.message || 'Error updating category';
+        error.value = e.message || t('productCategories.errorUpdating');
       } finally {
         loading.value = false;
       }
@@ -215,11 +217,11 @@ export default defineComponent({
         loading.value = true;
         error.value = null;
         await createProductCategory(dto);
-        toast.success("Category created");
+        toast.success(t('productCategories.created'));
         closeCategoryModal();
         fetchCategories();
       } catch (e: any) {
-        error.value = e.message || 'Error creating category';
+        error.value = e.message || t('productCategories.errorCreating');
       } finally {
         loading.value = false;
       }
@@ -234,10 +236,10 @@ export default defineComponent({
         if (result.success && result.data) {
           pagedResult.value = result.data;
         } else {
-          error.value = result.message || 'Failed to load categories';
+          error.value = result.message || t('productCategories.failedToLoad');
         }
       } catch (e: any) {
-        error.value = e.message || 'Error loading categories';
+        error.value = e.message || t('productCategories.errorLoading');
       } finally {
         loading.value = false;
       }

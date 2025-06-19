@@ -1,59 +1,25 @@
 <template>
   <div class="main-layout">
-    <header class="header">
-      <h1>Portfolio-Vue</h1>
-      <div class="header-user-menu" ref="menuRef" @click="toggleMenu" tabindex="0">
-        <svg class="header-user-icon" width="36" height="36" viewBox="0 0 20 20" fill="none">
-          <circle cx="10" cy="7" r="4" stroke="#fff" stroke-width="2" fill="none" />
-          <path d="M3 17c0-2.7614 3.134-5 7-5s7 2.2386 7 5" stroke="#fff" stroke-width="2" fill="none" />
-        </svg>
-        <div v-if="showMenu" class="user-dropdown" @click.stop>
-          <button class="dropdown-item" @click="logout">Log out</button>
+    <header class="header" style="display: flex; align-items: center; justify-content: space-between;">
+      <div class="header-left" style="display: flex; align-items: center;">
+        <img src="@/assets/logo.png" alt="Logo" style="height:52px; margin-right:12px; padding-top:14px;" />
+        <h1 style="margin: 0;">Portfolio-Vue</h1>
+      </div>
+      <div class="header-actions" style="display: flex; align-items: center; gap: 16px;">
+        <LanguageSelector />
+        <div class="header-user-menu" ref="menuRef" @click="toggleMenu" tabindex="0">
+          <svg class="header-user-icon" width="36" height="36" viewBox="0 0 20 20" fill="none">
+            <circle cx="10" cy="7" r="4" stroke="#fff" stroke-width="2" fill="none" />
+            <path d="M3 17c0-2.7614 3.134-5 7-5s7 2.2386 7 5" stroke="#fff" stroke-width="2" fill="none" />
+          </svg>
+          <div v-if="showMenu" class="user-dropdown" @click.stop>
+            <button class="dropdown-item" @click="logout">{{ $t('common.logout') }}</button>
+          </div>
         </div>
       </div>
     </header>
     <div class="layout-body">
-      <aside class="sidebar">
-        <nav>
-          <ul>
-            <li>
-              <router-link to="/users" class="nav-btn">
-                <span class="icon-entity" aria-hidden="true">
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                    <circle cx="10" cy="7" r="4" stroke="#42b883" stroke-width="2" fill="none" />
-                    <path d="M3 17c0-2.7614 3.134-5 7-5s7 2.2386 7 5" stroke="#42b883" stroke-width="2" fill="none" />
-                  </svg>
-                </span>
-                <span class="sidebar-link-text">Users</span>
-              </router-link>
-            </li>
-            <li>
-              <router-link to="/product-categories" class="nav-btn">
-                <span class="icon-entity" aria-hidden="true">
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                    <path d="M3 7l7-4 7 4v6c0 3.3137-2.6863 6-6 6s-6-2.6863-6-6V7z" stroke="#42b883" stroke-width="2"
-                      fill="none" />
-                    <circle cx="10" cy="11" r="2.5" stroke="#42b883" stroke-width="2" fill="none" />
-                  </svg>
-                </span>
-                <span class="sidebar-link-text">Product Categories</span>
-              </router-link>
-            </li>
-            <li>
-              <router-link to="/products" class="nav-btn">
-                <span class="icon-entity" aria-hidden="true">
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                    <polygon points="2,7 10,2 18,7 10,12" stroke="#42b883" stroke-width="2" fill="none"/>
-                    <polyline points="2,7 2,15 10,18 18,15 18,7" stroke="#42b883" stroke-width="2" fill="none"/>
-                    <line x1="10" y1="12" x2="10" y2="18" stroke="#42b883" stroke-width="2"/>
-                  </svg>
-                </span>
-                <span class="sidebar-link-text">Products</span>
-              </router-link>
-            </li>
-          </ul>
-        </nav>
-      </aside>
+      <AppSidebar />
       <section class="page-content">
         <router-view />
       </section>
@@ -65,9 +31,12 @@
 import { defineComponent, ref, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
 import { removeToken } from '../services/tokenService';
+import AppSidebar from './Sidebar.vue';
+import LanguageSelector from './LanguageSelector.vue';
 
 export default defineComponent({
   name: 'MainLayout',
+  components: { AppSidebar, LanguageSelector },
   setup() {
     const showMenu = ref(false);
     const router = useRouter();
@@ -104,10 +73,28 @@ export default defineComponent({
 </script>
 
 <style scoped>
+.header-left {
+  display: flex;
+  align-items: center;
+}
 .main-layout {
   height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 40px;
+}
+
+.header-actions .language-selector {
+  margin-bottom: 0;
+  height: 40px;
+  display: flex;
+  align-items: center;
 }
 
 .header {
