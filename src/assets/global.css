@@ -1,0 +1,213 @@
+/* Common reusable styles for the app */
+
+.icon-user {
+  display: flex;
+  align-items: center;
+}
+
+.form-label {
+  text-align: left !important;
+  display: block;
+}
+
+.form-control {
+  border-color: #42b883 !important;
+  box-shadow: none !important;
+}
+
+.form-control:focus {
+  border-color: #368a6e !important;
+  box-shadow: 0 0 0 0.2rem rgba(66, 184, 131, 0.25) !important;
+}
+
+.btn-primary {
+  background-color: #42b883 !important;
+  border-color: #42b883 !important;
+  color: #fff !important;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+  background-color: #368a6e !important;
+  border-color: #368a6e !important;
+  color: #fff !important;
+}
+.th-bg {
+  display: block;
+  background: #42b883;
+  color: #fff;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: 0.2px;
+  box-shadow: 0 1px 4px rgba(66, 184, 131, 0.08);
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  padding: 4px;
+  margin: 0 2px;
+  cursor: pointer;
+  transition: background 0.15s;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+}
+.action-btn:hover {
+  background: #e6f7f1;
+}
+
+.pagination {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.pagination button {
+  padding: 6px 18px;
+  font-size: 1rem;
+  border-radius: 6px;
+  border: none;
+  background: #42b883;
+  color: #fff;
+  font-weight: 600;
+  transition: background 0.15s;
+}
+.pagination button:disabled {
+  background: #b2dfd0;
+  color: #fff;
+  cursor: not-allowed;
+}
+
+.error {
+  color: #c00;
+  margin-top: 16px;
+}
+
+.custom-modal-backdrop {
+  z-index: 1050 !important;
+}
+
+.icon-plus {
+  display: flex !important;
+  align-items: center !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+.title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  margin-top: 0;
+  padding: 0 0 0 0;
+}
+
+.title-main {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-bottom: 0;
+  margin-top: 0;
+  padding: 18px 28px 14px 18px;
+  background: linear-gradient(90deg, #e6f7f1 0%, #fff 100%);
+  border-bottom: 3px solid #42b883;
+  border-radius: 10px 10px 0 0;
+  box-shadow: 0 2px 8px rgba(66, 184, 131, 0.07);
+  color: #222e3c;
+  letter-spacing: 0.5px;
+}
+.add-entity-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #42b883;
+  color: #fff;
+  font-weight: 600;
+  font-size: 1.08rem;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  box-shadow: 0 2px 8px rgba(66, 184, 131, 0.07);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.add-entity-btn:hover {
+  background: #36976b;
+}
+.entity-card {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 4px 24px 0 rgba(66, 184, 131, 0.10), 0 1.5px 4px 0 rgba(34, 46, 60, 0.04);
+  padding: 24px 24px 12px 24px;
+  margin-top: 18px;
+  margin-bottom: 18px;
+  transition: box-shadow 0.2s;
+}
+
+.entity-table {
+  margin-top: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: transparent;
+}
+
+.entity-table thead tr th {
+  border: none;
+  padding: 16px 12px;
+  background: none;
+}
+
+.entity-row {
+  transition: background 0.15s;
+}
+.entity-row:hover {
+  background: #e6f7f1 !important;
+}
+
+.entity-table td {
+  background: #fff;
+  border: none;
+  padding: 14px 12px;
+  font-size: 1rem;
+}
+
+.actions-cell {
+  text-align: center;
+  vertical-align: middle;
+}
+.icon-entity {
+  display: flex;
+  align-items: center;
+}
+.sidebar-link-text {
+  color: #111 !important;
+  font-weight: 600;
+}
+
+.sidebar nav ul li a {
+  color: #222e3c;
+  text-decoration: none;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  border-radius: 8px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.sidebar nav ul li a.router-link-exact-active,
+.sidebar nav ul li a:hover {
+  background: #e6f7f1;
+  color: #42b883;
+}
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}

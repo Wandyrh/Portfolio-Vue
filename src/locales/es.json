@@ -1,0 +1,113 @@
+{
+  "login": {
+    "title": "Iniciar sesión",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "loginButton": "Entrar",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "noAccount": "¿No tienes una cuenta?",
+    "register": "Registrarse",
+    "error": "Correo o contraseña inválidos",
+    "success": "¡Inicio de sesión exitoso!",
+    "validation": {
+      "emailRequired": "El correo es requerido",
+      "emailInvalid": "Correo electrónico inválido",
+      "passwordRequired": "La contraseña es requerida",
+      "passwordMin": "La contraseña debe tener al menos 6 caracteres"
+    }
+  }
+,
+"products": {
+  "title": "Productos",
+  "addProduct": "Agregar Producto",
+  "editProduct": "Editar Producto",
+  "deleteProduct": "Eliminar Producto",
+  "name": "Nombre",
+  "description": "Descripción",
+  "category": "Categoría",
+  "selectCategory": "Selecciona una categoría",
+  "confirmDelete": "¿Estás seguro de que deseas eliminar \"{name}\"?",
+  "deleted": "Producto eliminado",
+  "updated": "Producto actualizado",
+  "created": "Producto creado",
+  "errorDeleting": "Error al eliminar el producto",
+  "errorUpdating": "Error al actualizar el producto",
+  "errorCreating": "Error al crear el producto",
+  "failedToLoad": "No se pudieron cargar los productos",
+  "errorLoading": "Error al cargar los productos",
+  "validation": {
+    "categoryRequired": "La categoría es requerida",
+    "nameRequired": "El nombre es requerido",
+    "descriptionRequired": "La descripción es requerida"
+  }
+},
+"productCategories": {
+  "title": "Categorías de Producto",
+  "addCategory": "Agregar Categoría",
+  "editCategory": "Editar Categoría",
+  "deleteCategory": "Eliminar Categoría",
+  "name": "Nombre",
+  "description": "Descripción",
+  "confirmDelete": "¿Estás seguro de que deseas eliminar \"{name}\"?",
+  "deleted": "Categoría eliminada",
+  "updated": "Categoría actualizada",
+  "created": "Categoría creada",
+  "errorDeleting": "Error al eliminar la categoría",
+  "errorUpdating": "Error al actualizar la categoría",
+  "errorCreating": "Error al crear la categoría",
+  "failedToLoad": "No se pudieron cargar las categorías",
+  "errorLoading": "Error al cargar las categorías",
+  "validation": {
+    "nameRequired": "El nombre es requerido",
+    "descriptionRequired": "La descripción es requerida"
+  },
+  "sidebar": {
+    "users": "Usuarios",
+    "productCategories": "Categorías de Producto",
+    "products": "Productos"
+  }
+},
+"users": {
+  "title": "Usuarios",
+  "addUser": "Agregar usuario",
+  "editUser": "Editar usuario",
+  "deleteUser": "Eliminar usuario",
+  "firstName": "Nombre",
+  "lastName": "Apellido",
+  "email": "Correo electrónico",
+  "phone": "Teléfono",
+  "password": "Contraseña",
+  "confirmDelete": "¿Estás seguro de que deseas eliminar a {name}?",
+  "deleted": "Usuario eliminado",
+  "updated": "Usuario actualizado",
+  "created": "Usuario creado",
+  "errorDeleting": "Error al eliminar usuario",
+  "errorUpdating": "Error al actualizar usuario",
+  "errorCreating": "Error al crear usuario",
+  "failedToLoad": "No se pudieron cargar los usuarios",
+  "errorLoading": "Error al cargar usuarios",
+  "validation": {
+    "firstNameRequired": "El nombre es requerido",
+    "lastNameRequired": "El apellido es requerido",
+    "emailInvalid": "Correo electrónico inválido",
+    "emailRequired": "El correo es requerido",
+    "phoneRequired": "El teléfono es requerido",
+    "passwordMin": "La contraseña debe tener al menos 6 caracteres",
+    "passwordRequired": "La contraseña es requerida"
+  }
+},
+"common": {
+  "actions": "Acciones",
+  "edit": "Editar",
+  "delete": "Eliminar",
+  "prev": "Anterior",
+  "next": "Siguiente",
+  "page": "Página",
+  "of": "de",
+  "loading": "Cargando...",
+  "cancel": "Cancelar",
+  "update": "Actualizar",
+  "create": "Crear",
+  "logout": "Cerrar sesión"
+}
+}
