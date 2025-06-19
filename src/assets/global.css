@@ -206,3 +206,8 @@
   background: #e6f7f1;
   color: #42b883;
 }
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}

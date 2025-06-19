@@ -2,19 +2,19 @@
   <Form :key="mode + (category && category.id ? category.id : '')" @submit="onSubmit" :validation-schema="validationSchema"
     :initial-values="initialValues" class="category-form">
     <div class="mb-3">
-      <label for="name" class="form-label">Name</label>
+      <label for="name" class="form-label">{{ $t('productCategories.name') }}</label>
       <Field name="name" type="text" class="form-control" id="name" />
       <ErrorMessage name="name" class="text-danger" />
     </div>
     <div class="mb-3">
-      <label for="description" class="form-label">Description</label>
+      <label for="description" class="form-label">{{ $t('productCategories.description') }}</label>
       <Field name="description" type="text" class="form-control" id="description" />
       <ErrorMessage name="description" class="text-danger" />
     </div>
     <div class="d-flex justify-content-end gap-2 mt-4">
-      <button type="button" class="btn btn-outline-secondary" @click="$emit('cancel')">Cancel</button>
+      <button type="button" class="btn btn-outline-secondary" @click="$emit('cancel')">{{ $t('common.cancel') }}</button>
       <button type="submit" class="btn btn-success">
-        {{ mode === 'edit' ? 'Update' : 'Create' }}
+        {{ mode === 'edit' ? $t('common.update') : $t('common.create') }}
       </button>
     </div>
   </Form>
@@ -22,6 +22,7 @@
 
 <script lang="ts">
 import { defineComponent, PropType, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { Form, Field, ErrorMessage } from 'vee-validate';
 import * as yup from 'yup';
 import { ProductCategoryDto, CreateProductCategoryDto, UpdateProductCategoryDto } from '../types/productCategory';
@@ -50,10 +51,11 @@ export default defineComponent({
   },
   emits: ['submit', 'cancel'],
   setup(props, { emit }) {
+    const { t } = useI18n();
     const schema = computed(() =>
       yup.object({
-        name: yup.string().required('Name is required'),
-        description: yup.string().required('Description is required'),
+        name: yup.string().required(t('productCategories.validation.nameRequired')),
+        description: yup.string().required(t('productCategories.validation.descriptionRequired')),
       })
     );
 
