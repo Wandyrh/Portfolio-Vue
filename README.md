@@ -7,6 +7,13 @@ A demonstration project for the portfolio of Wandy Rodríguez. This Vue 3 applic
 
 ---
 
+![imagen](https://github.com/user-attachments/assets/12cda765-0b77-44a4-8bfc-7449ac9df21d)
+![imagen](https://github.com/user-attachments/assets/58a1e5ee-ce32-41c7-a9bd-f39c5745de51)
+![imagen](https://github.com/user-attachments/assets/382f9167-583f-4206-b40e-ddfb44ce85d0)
+![imagen](https://github.com/user-attachments/assets/1149ad96-1408-44d1-a1dd-c709d22cc088)
+
+---
+
 ## Technologies Used
 
 - Vue 3 (Composition API, Single File Components)
