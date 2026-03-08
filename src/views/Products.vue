@@ -109,174 +109,147 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref, onMounted } from 'vue';
-import { useI18n } from 'vue-i18n';
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import {
   getProductsPaged,
   createProduct,
   updateProduct,
   deleteProduct
-} from '../services/productService';
-import { ProductDto, CreateProductDto, UpdateProductDto } from '../types/product';
-import ProductForm from '../components/ProductForm.vue';
-import ConfirmDialog from '../components/ConfirmDialog.vue';
-import { useToast } from 'vue-toastification';
+} from '../services/productService'
+import { ProductDto, CreateProductDto, UpdateProductDto } from '../types/product'
+import ProductForm from '../components/ProductForm.vue'
+import ConfirmDialog from '../components/ConfirmDialog.vue'
+import { useToast } from 'vue-toastification'
+import { PagedResult } from '../types/api'
 
-import { PagedResult } from '../types/api';
+const { t } = useI18n()
+const toast = useToast()
 
-export default defineComponent({
-  name: 'ProductsView',
-  setup() {
-    const { t } = useI18n();
-    const pagedResult = ref<PagedResult<ProductDto> | null>(null);
-    const loading = ref(true);
-    const error = ref<string | null>(null);
-    const page = ref(1);
-    const pageSize = ref(5);
+const pagedResult = ref<PagedResult<ProductDto> | null>(null)
+const loading = ref(true)
+const error = ref<string | null>(null)
+const page = ref(1)
+const pageSize = ref(5)
 
-    const toast = useToast();
+// Confirm dialog state
+const showConfirmDialog = ref(false)
+const confirmMessage = ref('')
+const productToDelete = ref<ProductDto | null>(null)
 
-    // Confirm dialog state
-    const showConfirmDialog = ref(false);
-    const confirmMessage = ref('');
-    const productToDelete = ref<ProductDto | null>(null);
+// Product modal state
+const showProductModal = ref(false)
+const productModalMode = ref<'create' | 'edit'>('create')
+const selectedProduct = ref<ProductDto | null>(null)
 
-    function showDeleteConfirm(product: ProductDto) {
-      productToDelete.value = product;
-      confirmMessage.value = t('products.confirmDelete', { name: product.name });
-      showConfirmDialog.value = true;
+function showDeleteConfirm(product: ProductDto) {
+  productToDelete.value = product
+  confirmMessage.value = t('products.confirmDelete', { name: product.name })
+  showConfirmDialog.value = true
+}
+
+async function confirmDeleteProduct() {
+  if (!productToDelete.value) return
+  try {
+    loading.value = true
+    error.value = null
+    await deleteProduct(productToDelete.value.id)
+    toast.success(t('products.deleted'))
+    fetchProducts()
+  } catch (e: any) {
+    error.value = e.message || t('products.errorDeleting')
+  } finally {
+    loading.value = false
+    showConfirmDialog.value = false
+    productToDelete.value = null
+  }
+}
+
+function cancelDeleteProduct() {
+  showConfirmDialog.value = false
+  productToDelete.value = null
+}
+
+function openProductModal() {
+  productModalMode.value = 'create'
+  selectedProduct.value = null
+  showProductModal.value = true
+}
+
+function openEditProductModal(product: ProductDto) {
+  productModalMode.value = 'edit'
+  selectedProduct.value = product
+  showProductModal.value = true
+}
+
+function closeProductModal() {
+  showProductModal.value = false
+  selectedProduct.value = null
+}
+
+function handleProductFormSubmit(dto: UpdateProductDto | CreateProductDto) {
+  if (productModalMode.value === 'edit') {
+    handleEditProduct(dto as UpdateProductDto)
+  } else {
+    handleCreateProduct(dto as CreateProductDto)
+  }
+}
+
+async function handleEditProduct(dto: UpdateProductDto) {
+  try {
+    loading.value = true
+    error.value = null
+    await updateProduct(dto.id, dto)
+    toast.success(t('products.updated'))
+    closeProductModal()
+    fetchProducts()
+  } catch (e: any) {
+    error.value = e.message || t('products.errorUpdating')
+  } finally {
+    loading.value = false
+  }
+}
+
+async function handleCreateProduct(dto: CreateProductDto) {
+  try {
+    loading.value = true
+    error.value = null
+    await createProduct(dto)
+    toast.success(t('products.created'))
+    closeProductModal()
+    fetchProducts()
+  } catch (e: any) {
+    error.value = e.message || t('products.errorCreating')
+  } finally {
+    loading.value = false
+  }
+}
+
+const fetchProducts = async () => {
+  loading.value = true
+  error.value = null
+  try {
+    const params = `page=${page.value}&pageSize=${pageSize.value}`
+    const result = await getProductsPaged(params)
+    if (result.success && result.data) {
+      pagedResult.value = result.data
+    } else {
+      error.value = result.message || t('products.failedToLoad')
     }
+  } catch (e: any) {
+    error.value = e.message || t('products.errorLoading')
+  } finally {
+    loading.value = false
+  }
+}
 
-    async function confirmDeleteProduct() {
-      if (!productToDelete.value) return;
-      try {
-        loading.value = true;
-        error.value = null;
-        await deleteProduct(productToDelete.value.id);
-        toast.success(t('products.deleted'));
-        fetchProducts();
-      } catch (e: any) {
-        error.value = e.message || t('products.errorDeleting');
-      } finally {
-        loading.value = false;
-        showConfirmDialog.value = false;
-        productToDelete.value = null;
-      }
-    }
+const goToPage = (p: number) => {
+  if (pagedResult.value && p >= 1 && p <= pagedResult.value.totalPages) {
+    page.value = p
+    fetchProducts()
+  }
+}
 
-    function cancelDeleteProduct() {
-      showConfirmDialog.value = false;
-      productToDelete.value = null;
-    }
-
-    const showProductModal = ref(false);
-    const productModalMode = ref<'create' | 'edit'>('create');
-    const selectedProduct = ref<ProductDto | null>(null);
-
-    function openProductModal() {
-      productModalMode.value = 'create';
-      selectedProduct.value = null;
-      showProductModal.value = true;
-    }
-    function openEditProductModal(product: ProductDto) {
-      productModalMode.value = 'edit';
-      selectedProduct.value = product;
-      showProductModal.value = true;
-    }
-    function closeProductModal() {
-      showProductModal.value = false;
-      selectedProduct.value = null;
-    }
-
-    function handleProductFormSubmit(dto: UpdateProductDto | CreateProductDto) {
-      if (productModalMode.value === 'edit') {
-        handleEditProduct(dto as UpdateProductDto)
-      } else {
-        handleCreateProduct(dto as CreateProductDto);
-      }
-    }
-
-    async function handleEditProduct(dto: UpdateProductDto) {
-      try {
-        loading.value = true;
-        error.value = null;
-        await updateProduct(dto.id, dto);
-        toast.success(t('products.updated'));
-        closeProductModal();
-        fetchProducts();
-      } catch (e: any) {
-        error.value = e.message || t('products.errorUpdating');
-      } finally {
-        loading.value = false;
-      }
-    }
-
-    async function handleCreateProduct(dto: CreateProductDto) {
-      try {
-        loading.value = true;
-        error.value = null;
-        await createProduct(dto);
-        toast.success(t('products.created'));
-        closeProductModal();
-        fetchProducts();
-      } catch (e: any) {
-        error.value = e.message || t('products.errorCreating');
-      } finally {
-        loading.value = false;
-      }
-    }
-
-    const fetchProducts = async () => {
-      loading.value = true;
-      error.value = null;
-      try {
-        const params = `page=${page.value}&pageSize=${pageSize.value}`;
-        const result = await getProductsPaged(params);
-        if (result.success && result.data) {
-          pagedResult.value = result.data;
-        } else {
-          error.value = result.message || t('products.failedToLoad');
-        }
-      } catch (e: any) {
-        error.value = e.message || t('products.errorLoading');
-      } finally {
-        loading.value = false;
-      }
-    };
-
-    onMounted(fetchProducts);
-
-    const goToPage = (p: number) => {
-      if (pagedResult.value && p >= 1 && p <= pagedResult.value.totalPages) {
-        page.value = p;
-        fetchProducts();
-      }
-    };
-
-    return {
-      pagedResult,
-      loading,
-      error,
-      page,
-      pageSize,
-      goToPage,
-      showProductModal,
-      openProductModal,
-      closeProductModal,
-      handleCreateProduct,
-      handleEditProduct,
-      handleProductFormSubmit,
-      showDeleteConfirm,
-      showConfirmDialog,
-      confirmMessage,
-      confirmDeleteProduct,
-      cancelDeleteProduct,
-      openEditProductModal,
-      productModalMode,
-      selectedProduct,
-    };
-  },
-  components: { ProductForm, ConfirmDialog },
-});
+onMounted(fetchProducts)
 </script>

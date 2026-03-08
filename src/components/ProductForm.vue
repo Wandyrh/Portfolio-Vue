@@ -28,77 +28,69 @@
   </Form>
 </template>
 
-<script lang="ts">
-import { defineComponent, PropType, computed, ref, onMounted } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { Form, Field, ErrorMessage } from 'vee-validate';
-import * as yup from 'yup';
-import { ProductDto, CreateProductDto, UpdateProductDto } from '../types/product';
-import { getProductCategories } from '../services/productCategoryService';
-import { ProductCategoryDto } from '../types/productCategory';
+<script setup lang="ts">
+import { computed, ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { Form, Field, ErrorMessage } from 'vee-validate'
+import * as yup from 'yup'
+import { ProductDto, CreateProductDto, UpdateProductDto } from '../types/product'
+import { getProductCategories } from '../services/productCategoryService'
+import { ProductCategoryDto } from '../types/productCategory'
 
-type ProductFormMode = 'create' | 'edit';
+type ProductFormMode = 'create' | 'edit'
 
-export default defineComponent({
-  name: 'ProductForm',
-  components: { Form, Field, ErrorMessage },
-  props: {
-    mode: {
-      type: String as PropType<ProductFormMode>,
-      required: true,
-    },
-    product: {
-      type: Object as PropType<ProductDto | null>,
-      default: null,
-    },
-    initialValues: {
-      type: Object as PropType<Record<string, any>>,
-      default: () => ({
-        categoryId: '',
-        name: '',
-        description: '',
-      }),
-    },
-  },
-  emits: ['submit', 'cancel'],
-  setup(props, { emit }) {
-    const { t } = useI18n();
-    const categories = ref<ProductCategoryDto[]>([]);
+interface Props {
+  mode: ProductFormMode
+  product?: ProductDto | null
+  initialValues?: Record<string, any>
+}
 
-    onMounted(async () => {
-      const result = await getProductCategories();
-      categories.value = result?.data ?? [];
-    });
+const props = withDefaults(defineProps<Props>(), {
+  product: null,
+  initialValues: () => ({
+    categoryId: '',
+    name: '',
+    description: '',
+  })
+})
 
-    const schema = computed(() =>
-      yup.object({
-        categoryId: yup.string().required(t('products.validation.categoryRequired')),
-        name: yup.string().required(t('products.validation.nameRequired')),
-        description: yup.string().required(t('products.validation.descriptionRequired')),
-      })
-    );
+const emit = defineEmits<{
+  submit: [value: CreateProductDto | UpdateProductDto]
+  cancel: []
+}>()
 
-    function onSubmit(values: Record<string, any>) {
-      if (props.mode === 'edit' && props.product && props.product.id) {
-        emit('submit', {
-          id: props.product.id,
-          categoryId: values.categoryId,
-          name: values.name,
-          description: values.description,
-        } as UpdateProductDto);
-      } else if (props.mode === 'create') {
-        emit('submit', {
-          categoryId: values.categoryId,
-          name: values.name,
-          description: values.description,
-        } as CreateProductDto);
-      }
-    }
+const { t } = useI18n()
+const categories = ref<ProductCategoryDto[]>([])
 
-    const validationSchema = schema.value;
-    return { validationSchema, onSubmit, categories };
-  },
-});
+onMounted(async () => {
+  const result = await getProductCategories()
+  categories.value = result?.data ?? []
+})
+
+const validationSchema = computed(() =>
+  yup.object({
+    categoryId: yup.string().required(t('products.validation.categoryRequired')),
+    name: yup.string().required(t('products.validation.nameRequired')),
+    description: yup.string().required(t('products.validation.descriptionRequired')),
+  })
+)
+
+function onSubmit(values: Record<string, any>) {
+  if (props.mode === 'edit' && props.product && props.product.id) {
+    emit('submit', {
+      id: props.product.id,
+      categoryId: values.categoryId,
+      name: values.name,
+      description: values.description,
+    } as UpdateProductDto)
+  } else if (props.mode === 'create') {
+    emit('submit', {
+      categoryId: values.categoryId,
+      name: values.name,
+      description: values.description,
+    } as CreateProductDto)
+  }
+}
 </script>
 
 <style scoped>

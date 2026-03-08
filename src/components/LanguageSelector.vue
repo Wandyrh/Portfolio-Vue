@@ -7,31 +7,24 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { useLanguageStore } from '../stores/language';
+<script setup lang="ts">
+import { ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useLanguageStore } from '../stores/language'
 
-export default defineComponent({
-  name: 'LanguageSelector',
-  setup() {
-    const languageStore = useLanguageStore();
-    const { locale } = useI18n();
-    const selected = ref(languageStore.language);
+const languageStore = useLanguageStore()
+const { locale } = useI18n()
+const selected = ref(languageStore.language)
 
-    watch(selected, (val) => {
-      languageStore.setLanguage(val);
-      locale.value = val;
-    });
+watch(selected, (val) => {
+  languageStore.setLanguage(val)
+  locale.value = val
+})
 
-    function changeLanguage() {
-      languageStore.setLanguage(selected.value);
-      locale.value = selected.value;
-    }
-
-    return { selected, changeLanguage };
-  }
-});
+function changeLanguage() {
+  languageStore.setLanguage(selected.value)
+  locale.value = selected.value
+}
 </script>
 
 <style scoped>
