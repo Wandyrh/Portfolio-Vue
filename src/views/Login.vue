@@ -33,74 +33,57 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref } from 'vue';
-import { useRouter } from 'vue-router';
-import { Form, Field, ErrorMessage } from 'vee-validate';
-import * as yup from 'yup';
-import { login } from '../services/authService';
-import { setToken } from '../services/tokenService';
-import LanguageSelector from '../components/LanguageSelector.vue';
-import { useI18n } from 'vue-i18n';
+<script setup lang="ts">
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { Form, Field, ErrorMessage } from 'vee-validate'
+import * as yup from 'yup'
+import { login } from '../services/authService'
+import { setToken } from '../services/tokenService'
+import LanguageSelector from '../components/LanguageSelector.vue'
+import { useI18n } from 'vue-i18n'
 
-export default defineComponent({
-  name: 'LoginPage',
-  components: {
-    Form,
-    Field,
-    ErrorMessage,
-    LanguageSelector,
-  },
-  setup() {
-    const router = useRouter();
-    const { t } = useI18n();
-    const schema = yup.object({
-      email: yup
-        .string()
-        .email(t('login.validation.emailInvalid'))
-        .required(t('login.validation.emailRequired')),
-      password: yup
-        .string()
-        .min(6, t('login.validation.passwordMin'))
-        .required(t('login.validation.passwordRequired')),
-    });
+const router = useRouter()
+const { t } = useI18n()
 
-    const errorMessage = ref('');
-    const successMessage = ref('');
+const schema = yup.object({
+  email: yup
+    .string()
+    .email(t('login.validation.emailInvalid'))
+    .required(t('login.validation.emailRequired')),
+  password: yup
+    .string()
+    .min(6, t('login.validation.passwordMin'))
+    .required(t('login.validation.passwordRequired')),
+})
 
-    const onSubmit = async (values: Record<string, any>) => {
-      errorMessage.value = '';
-      successMessage.value = '';
-      try {
-        const result = await login({
-          userName: values.email,
-          password: values.password,
-        });
+const errorMessage = ref('')
+const successMessage = ref('')
 
-        if (result.success && result.data) {
-          setToken(result.data.accessToken);
-          successMessage.value = t('login.success');
-          router.push('/users');
-        } else {
-          errorMessage.value = result.message || t('login.error');
-        }
-      } catch (error) {
-        if (error instanceof Error) {
-          errorMessage.value = error.message;
-        } else {
-          errorMessage.value = t('login.error');
-        }
-      }
-    };
+const onSubmit = async (values: Record<string, any>) => {
+  errorMessage.value = ''
+  successMessage.value = ''
+  try {
+    const result = await login({
+      userName: values.email,
+      password: values.password,
+    })
 
-    return {
-      schema,
-      onSubmit,
-      errorMessage,
-      successMessage,
-    };
-  },
-});
+    if (result.success && result.data) {
+      setToken(result.data.accessToken)
+      successMessage.value = t('login.success')
+      router.push('/users')
+    } else {
+      errorMessage.value = result.message || t('login.error')
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      errorMessage.value = error.message
+    } else {
+      errorMessage.value = t('login.error')
+    }
+  }
+}
 </script>
 
 <style scoped>

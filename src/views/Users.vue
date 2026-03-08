@@ -108,184 +108,141 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref, onMounted } from 'vue';
-import { getUsersPaged, createUser, updateUser, deleteUser } from '../services/userService';
-import { UserDto, CreateUserDto, UpdateUserDto } from '../types/user';
-import { PagedResult } from '../types/api';
-import UserForm from '../components/UserForm.vue';
-import ConfirmDialog from '../components/ConfirmDialog.vue';
-import { useToast } from 'vue-toastification';
-import { useI18n } from 'vue-i18n';
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { getUsersPaged, createUser, updateUser, deleteUser } from '../services/userService'
+import { UserDto, CreateUserDto, UpdateUserDto } from '../types/user'
+import { PagedResult } from '../types/api'
+import UserForm from '../components/UserForm.vue'
+import ConfirmDialog from '../components/ConfirmDialog.vue'
+import { useToast } from 'vue-toastification'
+import { useI18n } from 'vue-i18n'
 
-export default defineComponent({
-  name: 'UsersView',
-  setup() {
-    const { t } = useI18n();
-    const pagedResult = ref<PagedResult<UserDto> | null>(null);
-    const loading = ref(true);
-    const error = ref<string | null>(null);
-    const page = ref(1);
-    const pageSize = ref(5);
+const { t } = useI18n()
+const toast = useToast()
 
-    const toast = useToast();
+const pagedResult = ref<PagedResult<UserDto> | null>(null)
+const loading = ref(true)
+const error = ref<string | null>(null)
+const page = ref(1)
+const pageSize = ref(5)
 
-    // Confirm dialog state
-    const showConfirmDialog = ref(false);
-    const confirmMessage = ref('');
-    const userToDelete = ref<UserDto | null>(null);
+// Confirm dialog state
+const showConfirmDialog = ref(false)
+const confirmMessage = ref('')
+const userToDelete = ref<UserDto | null>(null)
 
-    function showDeleteConfirm(user: UserDto) {
-      userToDelete.value = user;
-      confirmMessage.value = `${t('users.confirmDelete', { name: user.firstName + ' ' + user.lastName })}`;
-      showConfirmDialog.value = true;
+// User modal state
+const showUserModal = ref(false)
+const userModalMode = ref<'create' | 'edit'>('create')
+const selectedUser = ref<UserDto | null>(null)
+
+function showDeleteConfirm(user: UserDto) {
+  userToDelete.value = user
+  confirmMessage.value = `${t('users.confirmDelete', { name: user.firstName + ' ' + user.lastName })}`
+  showConfirmDialog.value = true
+}
+
+async function confirmDeleteUser() {
+  if (!userToDelete.value) return
+  try {
+    loading.value = true
+    error.value = null
+    await deleteUser(userToDelete.value.id)
+    toast.success(t('users.deleted'))
+    fetchUsers()
+  } catch (e: any) {
+    error.value = e.message || t('users.errorDeleting')
+  } finally {
+    loading.value = false
+    showConfirmDialog.value = false
+    userToDelete.value = null
+  }
+}
+
+function cancelDeleteUser() {
+  showConfirmDialog.value = false
+  userToDelete.value = null
+}
+
+function openUserModal() {
+  userModalMode.value = 'create'
+  selectedUser.value = null
+  showUserModal.value = true
+}
+
+function openEditUserModal(user: UserDto) {
+  userModalMode.value = 'edit'
+  selectedUser.value = user
+  showUserModal.value = true
+}
+
+function closeUserModal() {
+  showUserModal.value = false
+  selectedUser.value = null
+}
+
+function handleUserFormSubmit(dto: UpdateUserDto | CreateUserDto) {
+  if (userModalMode.value === 'edit') {
+    handleEditUser(dto as UpdateUserDto)
+  } else {
+    handleCreateUser(dto as CreateUserDto)
+  }
+}
+
+async function handleEditUser(dto: UpdateUserDto) {
+  try {
+    loading.value = true
+    error.value = null
+    await updateUser(dto.id, dto)
+    toast.success(t('users.updated'))
+    closeUserModal()
+    fetchUsers()
+  } catch (e: any) {
+    error.value = e.message || t('users.errorUpdating')
+  } finally {
+    loading.value = false
+  }
+}
+
+async function handleCreateUser(dto: CreateUserDto) {
+  try {
+    loading.value = true
+    error.value = null
+    await createUser(dto)
+    toast.success(t('users.created'))
+    closeUserModal()
+    fetchUsers()
+  } catch (e: any) {
+    error.value = e.message || t('users.errorCreating')
+  } finally {
+    loading.value = false
+  }
+}
+
+const fetchUsers = async () => {
+  loading.value = true
+  error.value = null
+  try {
+    const result = await getUsersPaged(page.value, pageSize.value)
+    if (result.success && result.data) {
+      pagedResult.value = result.data
+    } else {
+      error.value = result.message || t('users.failedToLoad')
     }
+  } catch (e: any) {
+    error.value = e.message || t('users.errorLoading')
+  } finally {
+    loading.value = false
+  }
+}
 
-    async function confirmDeleteUser() {
-      if (!userToDelete.value) return;
-      try {
-        loading.value = true;
-        error.value = null;
-        await deleteUser(userToDelete.value.id);
-        toast.success(t('users.deleted'));
-        fetchUsers();
-      } catch (e: any) {
-        error.value = e.message || t('users.errorDeleting');
-      } finally {
-        loading.value = false;
-        showConfirmDialog.value = false;
-        userToDelete.value = null;
-      }
-    }
+const goToPage = (p: number) => {
+  if (pagedResult.value && p >= 1 && p <= pagedResult.value.totalPages) {
+    page.value = p
+    fetchUsers()
+  }
+}
 
-    function cancelDeleteUser() {
-      showConfirmDialog.value = false;
-      userToDelete.value = null;
-    }
-
-    const showUserModal = ref(false);
-    const userModalMode = ref<'create' | 'edit'>('create');
-    const selectedUser = ref<UserDto | null>(null);
-
-    function openUserModal() {
-      userModalMode.value = 'create';
-      selectedUser.value = null;
-      showUserModal.value = true;
-    }
-    function openEditUserModal(user: UserDto) {
-      userModalMode.value = 'edit';
-      selectedUser.value = user;
-      showUserModal.value = true;
-    }
-    function closeUserModal() {
-      showUserModal.value = false;
-      selectedUser.value = null;
-    }
-
-    function handleUserFormSubmit(dto: UpdateUserDto | CreateUserDto) {
-      if (userModalMode.value === 'edit') {
-        handleEditUser(dto as UpdateUserDto)
-      } else {
-        handleCreateUser(dto as CreateUserDto);
-      }
-    }
-
-    async function handleEditUser(dto: UpdateUserDto) {
-      try {
-        loading.value = true;
-        error.value = null;
-        await updateUser(dto.id, dto);
-        toast.success(t('users.updated'));
-        closeUserModal();
-        fetchUsers();
-      } catch (e: any) {
-        error.value = e.message || t('users.errorUpdating');
-      } finally {
-        loading.value = false;
-      }
-    }
-
-    async function handleCreateUser(dto: CreateUserDto) {
-      try {
-        loading.value = true;
-        error.value = null;
-        await createUser(dto);
-        toast.success(t('users.created'));
-        closeUserModal();
-        fetchUsers();
-      } catch (e: any) {
-        error.value = e.message || t('users.errorCreating');
-      } finally {
-        loading.value = false;
-      }
-    }
-
-    const fetchUsers = async () => {
-      loading.value = true;
-      error.value = null;
-      try {
-        const result = await getUsersPaged(page.value, pageSize.value);
-        if (result.success && result.data) {
-          pagedResult.value = result.data;
-        } else {
-          error.value = result.message || t('users.failedToLoad');
-        }
-      } catch (e: any) {
-        error.value = e.message || t('users.errorLoading');
-      } finally {
-        loading.value = false;
-      }
-    };
-
-    async function handleDeleteUser(user: UserDto) {
-      console.log('Deleting user:', user);
-      if (!confirm(t('users.confirmDelete', { name: user.firstName + ' ' + user.lastName }))) return;
-      try {
-        loading.value = true;
-        error.value = null;
-        await deleteUser(user.id);
-        fetchUsers();
-      } catch (e: any) {
-        error.value = e.message || t('users.errorDeleting');
-      } finally {
-        loading.value = false;
-      }
-    }
-
-    onMounted(fetchUsers);
-
-    const goToPage = (p: number) => {
-      if (pagedResult.value && p >= 1 && p <= pagedResult.value.totalPages) {
-        page.value = p;
-        fetchUsers();
-      }
-    };
-
-    return {
-      pagedResult,
-      loading,
-      error,
-      page,
-      pageSize,
-      goToPage,
-      showUserModal,
-      openUserModal,
-      closeUserModal,
-      handleCreateUser,
-      handleEditUser,
-      handleUserFormSubmit,
-      showDeleteConfirm,
-      handleDeleteUser,
-      showConfirmDialog,
-      confirmMessage,
-      confirmDeleteUser,
-      cancelDeleteUser,
-      openEditUserModal,
-      userModalMode,
-      selectedUser,
-    };
-
-  },
-  components: { UserForm, ConfirmDialog },
-});
+onMounted(fetchUsers)
 </script>

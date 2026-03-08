@@ -25,18 +25,21 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent } from 'vue';
+<script setup lang="ts">
+interface Props {
+  show: boolean
+  title?: string
+  message: string
+}
 
-export default defineComponent({
-  name: 'ConfirmDialog',
-  props: {
-    show: { type: Boolean, required: true },
-    title: { type: String, default: 'Confirm' },
-    message: { type: String, required: true }
-  },
-  emits: ['confirm', 'cancel']
-});
+withDefaults(defineProps<Props>(), {
+  title: 'Confirm'
+})
+
+defineEmits<{
+  confirm: []
+  cancel: []
+}>()
 </script>
 
 <style scoped>

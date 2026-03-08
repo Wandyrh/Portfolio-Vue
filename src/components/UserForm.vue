@@ -35,84 +35,70 @@
   </Form>
 </template>
 
-<script lang="ts">
-import { defineComponent, PropType, watch, computed } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { Form, Field, ErrorMessage } from 'vee-validate';
-import * as yup from 'yup';
-import { UserDto, CreateUserDto, UpdateUserDto } from '../types/user';
+<script setup lang="ts">
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { Form, Field, ErrorMessage } from 'vee-validate'
+import * as yup from 'yup'
+import { UserDto, CreateUserDto, UpdateUserDto } from '../types/user'
 
-type UserFormMode = 'create' | 'edit';
+type UserFormMode = 'create' | 'edit'
 
-export default defineComponent({
-  name: 'UserForm',
-  components: { Form, Field, ErrorMessage },
-  props: {
-    mode: {
-      type: String as PropType<UserFormMode>,
-      required: true,
-    },
-    user: {
-      type: Object as PropType<UserDto | null>,
-      default: null,
-    },
-    initialValues: {
-      type: Object as PropType<Record<string, any>>,
-      default: () => ({
-        firstName: '',
-        lastName: '',
-        email: '',
-        phone: '',
-        password: '',
-      }),
-    },
-  },
-  emits: ['submit', 'cancel'],
-  setup(props, { emit }) {
-    const { t } = useI18n();
-    const schema = computed(() =>
-      yup.object({
-      firstName: yup.string().required(t('users.validation.firstNameRequired')),
-      lastName: yup.string().required(t('users.validation.lastNameRequired')),
-      email: yup.string().email(t('users.validation.emailInvalid')).required(t('users.validation.emailRequired')),
-      phone: yup.string().required(t('users.validation.phoneRequired')),
-      ...(props.mode === 'create'
-        ? { password: yup.string().min(6, t('users.validation.passwordMin')).required(t('users.validation.passwordRequired')) }
-        : {}),
-    })
-    );
+interface Props {
+  mode: UserFormMode
+  user?: UserDto | null
+  initialValues?: Record<string, any>
+}
 
+const props = withDefaults(defineProps<Props>(), {
+  user: null,
+  initialValues: () => ({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    password: '',
+  })
+})
 
-    watch(
-      () => props.user,
-      () => { },
-      { immediate: true }
-    );
+const emit = defineEmits<{
+  submit: [value: CreateUserDto | UpdateUserDto]
+  cancel: []
+}>()
 
-    function onSubmit(values: Record<string, any>) {
-      if (props.mode === 'edit' && props.user && props.user.id) {
-        emit('submit', {
-          id: props.user.id,
-          firstName: values.firstName,
-          lastName: values.lastName,
-          email: values.email,
-          phone: values.phone,
-        } as UpdateUserDto);
-      } else if (props.mode === 'create') {
-        emit('submit', {
-          firstName: values.firstName,
-          lastName: values.lastName,
-          email: values.email,
-          phone: values.phone,
-          password: values.password,
-        } as CreateUserDto);
-      }
-    }
+const { t } = useI18n()
 
-    const validationSchema = schema.value;
-    return { validationSchema, onSubmit };
-  },
-});
+const validationSchema = computed(() =>
+  yup.object({
+    firstName: yup.string().required(t('users.validation.firstNameRequired')),
+    lastName: yup.string().required(t('users.validation.lastNameRequired')),
+    email: yup.string().email(t('users.validation.emailInvalid')).required(t('users.validation.emailRequired')),
+    phone: yup.string().required(t('users.validation.phoneRequired')),
+    ...(props.mode === 'create'
+      ? { password: yup.string().min(6, t('users.validation.passwordMin')).required(t('users.validation.passwordRequired')) }
+      : {}),
+  })
+)
+
+function onSubmit(values: Record<string, any>) {
+  if (props.mode === 'edit' && props.user && props.user.id) {
+    emit('submit', {
+      id: props.user.id,
+      firstName: values.firstName,
+      lastName: values.lastName,
+      email: values.email,
+      phone: values.phone,
+    } as UpdateUserDto)
+  } else if (props.mode === 'create') {
+    emit('submit', {
+      firstName: values.firstName,
+      lastName: values.lastName,
+      email: values.email,
+      phone: values.phone,
+      password: values.password,
+    } as CreateUserDto)
+  }
+}
 </script>
 
 <style scoped>

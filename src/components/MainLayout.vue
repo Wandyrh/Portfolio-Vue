@@ -27,49 +27,41 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref, onMounted, onBeforeUnmount } from 'vue';
-import { useRouter } from 'vue-router';
-import { removeToken } from '../services/tokenService';
-import AppSidebar from './Sidebar.vue';
-import LanguageSelector from './LanguageSelector.vue';
+<script setup lang="ts">
+import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { useRouter } from 'vue-router'
+import { removeToken } from '../services/tokenService'
+import AppSidebar from './Sidebar.vue'
+import LanguageSelector from './LanguageSelector.vue'
 
-export default defineComponent({
-  name: 'MainLayout',
-  components: { AppSidebar, LanguageSelector },
-  setup() {
-    const showMenu = ref(false);
-    const router = useRouter();
-    const menuRef = ref<HTMLElement | null>(null);
+const showMenu = ref(false)
+const router = useRouter()
+const menuRef = ref<HTMLElement | null>(null)
 
-    function toggleMenu(event: MouseEvent) {
-      event.stopPropagation();
-      showMenu.value = !showMenu.value;
-    }
+function toggleMenu(event: MouseEvent) {
+  event.stopPropagation()
+  showMenu.value = !showMenu.value
+}
 
-    function logout() {
-      removeToken();
-      router.push('/login');
-      showMenu.value = false;
-    }
+function logout() {
+  removeToken()
+  router.push('/login')
+  showMenu.value = false
+}
 
-    function handleClickOutside(event: MouseEvent) {
-      if (menuRef.value && !menuRef.value.contains(event.target as Node)) {
-        showMenu.value = false;
-      }
-    }
-
-    onMounted(() => {
-      window.addEventListener('click', handleClickOutside);
-    });
-
-    onBeforeUnmount(() => {
-      window.removeEventListener('click', handleClickOutside);
-    });
-
-    return { showMenu, toggleMenu, logout, menuRef };
+function handleClickOutside(event: MouseEvent) {
+  if (menuRef.value && !menuRef.value.contains(event.target as Node)) {
+    showMenu.value = false
   }
-});
+}
+
+onMounted(() => {
+  window.addEventListener('click', handleClickOutside)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('click', handleClickOutside)
+})
 </script>
 
 <style scoped>

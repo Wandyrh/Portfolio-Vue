@@ -105,178 +105,152 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref, onMounted } from 'vue';
-import { useI18n } from 'vue-i18n';
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import {
   getProductCategoriesPaged,
   createProductCategory,
   updateProductCategory,
   deleteProductCategory
-} from '../services/productCategoryService';
-import { ProductCategoryDto, CreateProductCategoryDto, UpdateProductCategoryDto } from '../types/productCategory';
-import ProductCategoryForm from '../components/ProductCategoryForm.vue';
-import ConfirmDialog from '../components/ConfirmDialog.vue';
-import { useToast } from 'vue-toastification';
+} from '../services/productCategoryService'
+import { ProductCategoryDto, CreateProductCategoryDto, UpdateProductCategoryDto } from '../types/productCategory'
+import ProductCategoryForm from '../components/ProductCategoryForm.vue'
+import ConfirmDialog from '../components/ConfirmDialog.vue'
+import { useToast } from 'vue-toastification'
 
 interface PagedResult<T> {
-  items: T[];
-  totalPages: number;
-  totalItems: number;
+  items: T[]
+  totalPages: number
+  totalItems: number
 }
 
-export default defineComponent({
-  name: 'ProductCategoriesView',
-  setup() {
-    const { t } = useI18n();
-    const pagedResult = ref<PagedResult<ProductCategoryDto> | null>(null);
-    const loading = ref(true);
-    const error = ref<string | null>(null);
-    const page = ref(1);
-    const pageSize = ref(5);
+const { t } = useI18n()
+const toast = useToast()
 
-    const toast = useToast();
+const pagedResult = ref<PagedResult<ProductCategoryDto> | null>(null)
+const loading = ref(true)
+const error = ref<string | null>(null)
+const page = ref(1)
+const pageSize = ref(5)
 
-    // Confirm dialog state
-    const showConfirmDialog = ref(false);
-    const confirmMessage = ref('');
-    const categoryToDelete = ref<ProductCategoryDto | null>(null);
+// Confirm dialog state
+const showConfirmDialog = ref(false)
+const confirmMessage = ref('')
+const categoryToDelete = ref<ProductCategoryDto | null>(null)
 
-    function showDeleteConfirm(category: ProductCategoryDto) {
-      categoryToDelete.value = category;
-      confirmMessage.value = t('productCategories.confirmDelete', { name: category.name });
-      showConfirmDialog.value = true;
+// Category modal state
+const showCategoryModal = ref(false)
+const categoryModalMode = ref<'create' | 'edit'>('create')
+const selectedCategory = ref<ProductCategoryDto | null>(null)
+
+function showDeleteConfirm(category: ProductCategoryDto) {
+  categoryToDelete.value = category
+  confirmMessage.value = t('productCategories.confirmDelete', { name: category.name })
+  showConfirmDialog.value = true
+}
+
+async function confirmDeleteCategory() {
+  if (!categoryToDelete.value) return
+  try {
+    loading.value = true
+    error.value = null
+    await deleteProductCategory(categoryToDelete.value.id)
+    toast.success(t('productCategories.deleted'))
+    fetchCategories()
+  } catch (e: any) {
+    error.value = e.message || t('productCategories.errorDeleting')
+  } finally {
+    loading.value = false
+    showConfirmDialog.value = false
+    categoryToDelete.value = null
+  }
+}
+
+function cancelDeleteCategory() {
+  showConfirmDialog.value = false
+  categoryToDelete.value = null
+}
+
+function openCategoryModal() {
+  categoryModalMode.value = 'create'
+  selectedCategory.value = null
+  showCategoryModal.value = true
+}
+
+function openEditCategoryModal(category: ProductCategoryDto) {
+  categoryModalMode.value = 'edit'
+  selectedCategory.value = category
+  showCategoryModal.value = true
+}
+
+function closeCategoryModal() {
+  showCategoryModal.value = false
+  selectedCategory.value = null
+}
+
+function handleCategoryFormSubmit(dto: UpdateProductCategoryDto | CreateProductCategoryDto) {
+  if (categoryModalMode.value === 'edit') {
+    handleEditCategory(dto as UpdateProductCategoryDto)
+  } else {
+    handleCreateCategory(dto as CreateProductCategoryDto)
+  }
+}
+
+async function handleEditCategory(dto: UpdateProductCategoryDto) {
+  try {
+    loading.value = true
+    error.value = null
+    await updateProductCategory(dto.id, dto)
+    toast.success(t('productCategories.updated'))
+    closeCategoryModal()
+    fetchCategories()
+  } catch (e: any) {
+    error.value = e.message || t('productCategories.errorUpdating')
+  } finally {
+    loading.value = false
+  }
+}
+
+async function handleCreateCategory(dto: CreateProductCategoryDto) {
+  try {
+    loading.value = true
+    error.value = null
+    await createProductCategory(dto)
+    toast.success(t('productCategories.created'))
+    closeCategoryModal()
+    fetchCategories()
+  } catch (e: any) {
+    error.value = e.message || t('productCategories.errorCreating')
+  } finally {
+    loading.value = false
+  }
+}
+
+const fetchCategories = async () => {
+  loading.value = true
+  error.value = null
+  try {
+    const params = `page=${page.value}&pageSize=${pageSize.value}`
+    const result = await getProductCategoriesPaged(params)
+    if (result.success && result.data) {
+      pagedResult.value = result.data
+    } else {
+      error.value = result.message || t('productCategories.failedToLoad')
     }
+  } catch (e: any) {
+    error.value = e.message || t('productCategories.errorLoading')
+  } finally {
+    loading.value = false
+  }
+}
 
-    async function confirmDeleteCategory() {
-      if (!categoryToDelete.value) return;
-      try {
-        loading.value = true;
-        error.value = null;
-        await deleteProductCategory(categoryToDelete.value.id);
-        toast.success(t('productCategories.deleted'));
-        fetchCategories();
-      } catch (e: any) {
-        error.value = e.message || t('productCategories.errorDeleting');
-      } finally {
-        loading.value = false;
-        showConfirmDialog.value = false;
-        categoryToDelete.value = null;
-      }
-    }
+const goToPage = (p: number) => {
+  if (pagedResult.value && p >= 1 && p <= pagedResult.value.totalPages) {
+    page.value = p
+    fetchCategories()
+  }
+}
 
-    function cancelDeleteCategory() {
-      showConfirmDialog.value = false;
-      categoryToDelete.value = null;
-    }
-
-    const showCategoryModal = ref(false);
-    const categoryModalMode = ref<'create' | 'edit'>('create');
-    const selectedCategory = ref<ProductCategoryDto | null>(null);
-
-    function openCategoryModal() {
-      categoryModalMode.value = 'create';
-      selectedCategory.value = null;
-      showCategoryModal.value = true;
-    }
-    function openEditCategoryModal(category: ProductCategoryDto) {
-      categoryModalMode.value = 'edit';
-      selectedCategory.value = category;
-      showCategoryModal.value = true;
-    }
-    function closeCategoryModal() {
-      showCategoryModal.value = false;
-      selectedCategory.value = null;
-    }
-
-    function handleCategoryFormSubmit(dto: UpdateProductCategoryDto | CreateProductCategoryDto) {
-      if (categoryModalMode.value === 'edit') {
-        handleEditCategory(dto as UpdateProductCategoryDto)
-      } else {
-        handleCreateCategory(dto as CreateProductCategoryDto);
-      }
-    }
-
-    async function handleEditCategory(dto: UpdateProductCategoryDto) {
-      try {
-        loading.value = true;
-        error.value = null;
-        await updateProductCategory(dto.id, dto);
-        toast.success(t('productCategories.updated'));
-        closeCategoryModal();
-        fetchCategories();
-      } catch (e: any) {
-        error.value = e.message || t('productCategories.errorUpdating');
-      } finally {
-        loading.value = false;
-      }
-    }
-
-    async function handleCreateCategory(dto: CreateProductCategoryDto) {
-      try {
-        loading.value = true;
-        error.value = null;
-        await createProductCategory(dto);
-        toast.success(t('productCategories.created'));
-        closeCategoryModal();
-        fetchCategories();
-      } catch (e: any) {
-        error.value = e.message || t('productCategories.errorCreating');
-      } finally {
-        loading.value = false;
-      }
-    }
-
-    const fetchCategories = async () => {
-      loading.value = true;
-      error.value = null;
-      try {
-        const params = `page=${page.value}&pageSize=${pageSize.value}`;
-        const result = await getProductCategoriesPaged(params);
-        if (result.success && result.data) {
-          pagedResult.value = result.data;
-        } else {
-          error.value = result.message || t('productCategories.failedToLoad');
-        }
-      } catch (e: any) {
-        error.value = e.message || t('productCategories.errorLoading');
-      } finally {
-        loading.value = false;
-      }
-    };
-
-    onMounted(fetchCategories);
-
-    const goToPage = (p: number) => {
-      if (pagedResult.value && p >= 1 && p <= pagedResult.value.totalPages) {
-        page.value = p;
-        fetchCategories();
-      }
-    };
-
-    return {
-      pagedResult,
-      loading,
-      error,
-      page,
-      pageSize,
-      goToPage,
-      showCategoryModal,
-      openCategoryModal,
-      closeCategoryModal,
-      handleCreateCategory,
-      handleEditCategory,
-      handleCategoryFormSubmit,
-      showDeleteConfirm,
-      showConfirmDialog,
-      confirmMessage,
-      confirmDeleteCategory,
-      cancelDeleteCategory,
-      openEditCategoryModal,
-      categoryModalMode,
-      selectedCategory,
-    };
-  },
-  components: { ProductCategoryForm, ConfirmDialog },
-});
+onMounted(fetchCategories)
 </script>
