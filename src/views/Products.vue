@@ -21,8 +21,8 @@
         {{ $t('products.addProduct') }}
       </button>
     </div>
-    <div v-if="loading">{{ $t('common.loading') }}</div>
-    <div v-else-if="error" class="error">{{ error }}</div>
+    <div v-if="productsStore.loading">{{ $t('common.loading') }}</div>
+    <div v-else-if="productsStore.error" class="error">{{ productsStore.error }}</div>
 
     <ConfirmDialog
       :show="confirmDialog.isOpen.value"
@@ -77,7 +77,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="product in pagedResult?.items" :key="product.id" class="entity-row">
+              <tr v-for="product in productsStore.products" :key="product.id" class="entity-row">
                 <td>{{ product.name }}</td>
                 <td>{{ product.description }}</td>
                 <td>{{ product.categoryName }}</td>
@@ -99,10 +99,10 @@
             </tbody>
           </table>
         </div>
-        <div class="pagination" v-if="pagedResult">
-          <button :disabled="page === 1" @click="goToPage(page - 1)">{{ $t('common.prev') }}</button>
-          <span>{{ $t('common.page') }} {{ page }} {{ $t('common.of') }} {{ pagedResult.totalPages }}</span>
-          <button :disabled="page === pagedResult.totalPages" @click="goToPage(page + 1)">{{ $t('common.next') }}</button>
+        <div class="pagination" v-if="productsStore.pagedResult">
+          <button :disabled="productsStore.page === 1" @click="productsStore.goToPage(productsStore.page - 1)">{{ $t('common.prev') }}</button>
+          <span>{{ $t('common.page') }} {{ productsStore.page }} {{ $t('common.of') }} {{ productsStore.totalPages }}</span>
+          <button :disabled="productsStore.page === productsStore.totalPages" @click="productsStore.goToPage(productsStore.page + 1)">{{ $t('common.next') }}</button>
         </div>
       </div>
     </template>
@@ -110,30 +110,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import {
-  getProductsPaged,
-  createProduct,
-  updateProduct,
-  deleteProduct
-} from '../services/productService'
+import { useToast } from 'vue-toastification'
 import { ProductDto, CreateProductDto, UpdateProductDto } from '../types/product'
 import ProductForm from '../components/ProductForm.vue'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
-import { PagedResult } from '../types/api'
 import { useModal } from '../composables/useModal'
 import { useConfirmDialog } from '../composables/useConfirmDialog'
-import { useCrud } from '../composables/useCrud'
+import { useProductsStore } from '../stores/products'
 
 const { t } = useI18n()
-
-// Pagination state
-const pagedResult = ref<PagedResult<ProductDto> | null>(null)
-const loading = ref(true)
-const error = ref<string | null>(null)
-const page = ref(1)
-const pageSize = ref(5)
+const toast = useToast()
+const productsStore = useProductsStore()
 
 // Modal management
 const productModal = useModal<ProductDto>()
@@ -141,31 +130,18 @@ const productModal = useModal<ProductDto>()
 // Confirm dialog management
 const confirmDialog = useConfirmDialog()
 
-// CRUD operations
-const productCrud = useCrud<ProductDto, CreateProductDto, UpdateProductDto>(
-  {
-    create: createProduct,
-    update: updateProduct,
-    delete: deleteProduct
-  },
-  {
-    created: 'products.created',
-    updated: 'products.updated',
-    deleted: 'products.deleted',
-    errorCreating: 'products.errorCreating',
-    errorUpdating: 'products.errorUpdating',
-    errorDeleting: 'products.errorDeleting'
-  },
-  fetchProducts
-)
-
 function showDeleteConfirm(product: ProductDto) {
   const message = t('products.confirmDelete', { name: product.name })
   confirmDialog.show(message, product, () => handleDelete(product))
 }
 
 async function handleDelete(product: ProductDto) {
-  await productCrud.remove(product.id)
+  try {
+    await productsStore.remove(product.id)
+    toast.success(t('products.deleted'))
+  } catch (e: any) {
+    toast.error(t('products.errorDeleting'))
+  }
 }
 
 function handleProductFormSubmit(dto: UpdateProductDto | CreateProductDto) {
@@ -177,39 +153,24 @@ function handleProductFormSubmit(dto: UpdateProductDto | CreateProductDto) {
 }
 
 async function handleEditProduct(dto: UpdateProductDto) {
-  await productCrud.update(dto.id, dto)
-  productModal.close()
+  try {
+    await productsStore.update(dto.id, dto)
+    toast.success(t('products.updated'))
+    productModal.close()
+  } catch (e: any) {
+    toast.error(t('products.errorUpdating'))
+  }
 }
 
 async function handleCreateProduct(dto: CreateProductDto) {
-  await productCrud.create(dto)
-  productModal.close()
-}
-
-async function fetchProducts() {
-  loading.value = true
-  error.value = null
   try {
-    const params = `page=${page.value}&pageSize=${pageSize.value}`
-    const result = await getProductsPaged(params)
-    if (result.success && result.data) {
-      pagedResult.value = result.data
-    } else {
-      error.value = result.message || t('products.failedToLoad')
-    }
+    await productsStore.create(dto)
+    toast.success(t('products.created'))
+    productModal.close()
   } catch (e: any) {
-    error.value = e.message || t('products.errorLoading')
-  } finally {
-    loading.value = false
+    toast.error(t('products.errorCreating'))
   }
 }
 
-function goToPage(p: number) {
-  if (pagedResult.value && p >= 1 && p <= pagedResult.value.totalPages) {
-    page.value = p
-    fetchProducts()
-  }
-}
-
-onMounted(fetchProducts)
+onMounted(productsStore.fetchProducts)
 </script>
