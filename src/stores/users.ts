@@ -8,15 +8,17 @@ import {
   updateUser,
   deleteUser
 } from '@/services/userService'
+import { useErrorHandler } from '@/composables/useErrorHandler'
 
 export const useUsersStore = defineStore('users', () => {
-  // State
   const pagedResult = ref<PagedResult<UserDto> | null>(null)
   const loading = ref(false)
   const error = ref<string | null>(null)
   const page = ref(1)
   const pageSize = ref(5)
 
+  const { handleError } = useErrorHandler()
+  
   // Getters
   const users = computed(() => pagedResult.value?.items || [])
   const totalPages = computed(() => pagedResult.value?.totalPages || 0)
@@ -32,27 +34,46 @@ export const useUsersStore = defineStore('users', () => {
         pagedResult.value = result.data
       } else {
         error.value = result.message || 'Failed to load users'
+        handleError(new Error(error.value), { 
+          showToast: false
+        })
       }
     } catch (e: any) {
       error.value = e.message || 'Error loading users'
+      handleError(e)
     } finally {
       loading.value = false
     }
   }
 
   async function create(dto: CreateUserDto) {
-    await createUser(dto)
-    await fetchUsers()
+    try {
+      await createUser(dto)
+      await fetchUsers()
+    } catch (e: any) {
+      handleError(e)
+      throw e
+    }
   }
 
   async function update(id: string, dto: UpdateUserDto) {
-    await updateUser(id, dto)
-    await fetchUsers()
+    try {
+      await updateUser(id, dto)
+      await fetchUsers()
+    } catch (e: any) {
+      handleError(e)
+      throw e
+    }
   }
 
   async function remove(id: string) {
-    await deleteUser(id)
-    await fetchUsers()
+    try {
+      await deleteUser(id)
+      await fetchUsers()
+    } catch (e: any) {
+      handleError(e)
+      throw e
+    }
   }
 
   function goToPage(p: number) {

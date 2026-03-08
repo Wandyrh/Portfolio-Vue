@@ -8,6 +8,7 @@ import {
   updateProduct,
   deleteProduct
 } from '@/services/productService'
+import { useErrorHandler } from '@/composables/useErrorHandler'
 
 export const useProductsStore = defineStore('products', () => {
   // State
@@ -17,6 +18,8 @@ export const useProductsStore = defineStore('products', () => {
   const page = ref(1)
   const pageSize = ref(5)
 
+  const { handleError } = useErrorHandler()
+  
   // Getters
   const products = computed(() => pagedResult.value?.items || [])
   const totalPages = computed(() => pagedResult.value?.totalPages || 0)
@@ -33,27 +36,46 @@ export const useProductsStore = defineStore('products', () => {
         pagedResult.value = result.data
       } else {
         error.value = result.message || 'Failed to load products'
+        handleError(new Error(error.value), { 
+          showToast: false
+        })
       }
     } catch (e: any) {
       error.value = e.message || 'Error loading products'
+      handleError(e)
     } finally {
       loading.value = false
     }
   }
 
   async function create(dto: CreateProductDto) {
-    await createProduct(dto)
-    await fetchProducts()
+    try {
+      await createProduct(dto)
+      await fetchProducts()
+    } catch (e: any) {
+      handleError(e)
+      throw e
+    }
   }
 
   async function update(id: string, dto: UpdateProductDto) {
-    await updateProduct(id, dto)
-    await fetchProducts()
+    try {
+      await updateProduct(id, dto)
+      await fetchProducts()
+    } catch (e: any) {
+      handleError(e)
+      throw e
+    }
   }
 
   async function remove(id: string) {
-    await deleteProduct(id)
-    await fetchProducts()
+    try {
+      await deleteProduct(id)
+      await fetchProducts()
+    } catch (e: any) {
+      handleError(e)
+      throw e
+    }
   }
 
   function goToPage(p: number) {

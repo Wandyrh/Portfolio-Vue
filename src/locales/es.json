@@ -109,5 +109,14 @@
   "update": "Actualizar",
   "create": "Crear",
   "logout": "Cerrar sesión"
+},
+"errors": {
+  "network": "Error de conexión de red. Por favor verifica tu conexión a internet.",
+  "authentication": "Autenticación requerida. Por favor inicia sesión nuevamente.",
+  "authorization": "Acceso denegado. No tienes permiso para acceder a este recurso.",
+  "validation": "Datos inválidos. Por favor verifica tu información e intenta de nuevo.",
+  "not_found": "El recurso solicitado no fue encontrado.",
+  "server": "Ocurrió un error en el servidor. Por favor intenta más tarde.",
+  "unknown": "Ocurrió un error inesperado. Por favor intenta de nuevo."
 }
 }
