@@ -11,3 +11,8 @@ export function getToken(): string | null {
 export function removeToken() {
   sessionStorage.removeItem(TOKEN_KEY);
 }
+
+export function isAuthenticated(): boolean {
+  const token = getToken();
+  return token !== null && token !== '';
+}

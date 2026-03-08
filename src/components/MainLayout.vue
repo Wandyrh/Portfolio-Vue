@@ -30,7 +30,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
-import { removeToken } from '../services/tokenService'
+import { logout as logoutUser } from '../services/authService'
 import AppSidebar from './Sidebar.vue'
 import LanguageSelector from './LanguageSelector.vue'
 
@@ -44,7 +44,7 @@ function toggleMenu(event: MouseEvent) {
 }
 
 function logout() {
-  removeToken()
+  logoutUser()
   router.push('/login')
   showMenu.value = false
 }
