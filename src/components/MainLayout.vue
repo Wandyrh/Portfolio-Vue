@@ -30,13 +30,14 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
-import { logout as logoutUser } from '../services/authService'
+import { useAuthStore } from '../stores/auth'
 import AppSidebar from './Sidebar.vue'
 import LanguageSelector from './LanguageSelector.vue'
 
 const showMenu = ref(false)
 const router = useRouter()
 const menuRef = ref<HTMLElement | null>(null)
+const authStore = useAuthStore()
 
 function toggleMenu(event: MouseEvent) {
   event.stopPropagation()
@@ -44,7 +45,7 @@ function toggleMenu(event: MouseEvent) {
 }
 
 function logout() {
-  logoutUser()
+  authStore.logout()
   router.push('/login')
   showMenu.value = false
 }
