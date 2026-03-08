@@ -10,7 +10,7 @@
         </span>
         {{ $t('users.title') }}
       </h2>
-      <button class="add-entity-btn" @click="openUserModal">
+      <button class="add-entity-btn" @click="userModal.openCreate()">
         <span class="icon-plus" aria-hidden="true">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
             <circle cx="12" cy="12" r="10" fill="#42b883" />
@@ -24,25 +24,25 @@
     <div v-else-if="error" class="error">{{ error }}</div>
 
     <!-- User Modal -->
-    <ConfirmDialog :show="showConfirmDialog" :title="$t('users.deleteUser')" :message="confirmMessage" @confirm="confirmDeleteUser"
-      @cancel="cancelDeleteUser" />
-    <div v-if="showUserModal">
+    <ConfirmDialog :show="confirmDialog.isOpen.value" :title="$t('users.deleteUser')" :message="confirmDialog.message.value" @confirm="confirmDialog.confirm"
+      @cancel="confirmDialog.cancel" />
+    <div v-if="userModal.isOpen.value">
       <div class="modal-backdrop fade show custom-modal-backdrop"></div>
       <div class="modal fade show" tabindex="-1" style="display: block;">
         <div class="modal-dialog modal-dialog-centered">
           <div class="modal-content">
             <div class="modal-header">
               <h5 class="modal-title">
-                {{ userModalMode === 'edit' ? $t('users.editUser') : $t('users.addUser') }}
+                {{ userModal.mode.value === 'edit' ? $t('users.editUser') : $t('users.addUser') }}
               </h5>
-              <button type="button" class="btn-close" @click="closeUserModal"></button>
+              <button type="button" class="btn-close" @click="userModal.close()"></button>
             </div>
             <div class="modal-body">
-              <UserForm :mode="userModalMode" :user="userModalMode === 'edit' ? selectedUser : null" :initial-values="userModalMode === 'edit' && selectedUser ? {
-                firstName: selectedUser.firstName,
-                lastName: selectedUser.lastName,
-                email: selectedUser.email,
-                phone: selectedUser.phone,
+              <UserForm :mode="userModal.mode.value" :user="userModal.mode.value === 'edit' ? userModal.selectedItem.value : null" :initial-values="userModal.mode.value === 'edit' && userModal.selectedItem.value ? {
+                firstName: userModal.selectedItem.value.firstName,
+                lastName: userModal.selectedItem.value.lastName,
+                email: userModal.selectedItem.value.email,
+                phone: userModal.selectedItem.value.phone,
                 password: ''
               } : {
                 firstName: '',
@@ -50,7 +50,7 @@
                 email: '',
                 phone: '',
                 password: ''
-              }" @submit="handleUserFormSubmit" @cancel="closeUserModal" />
+              }" @submit="handleUserFormSubmit" @cancel="userModal.close()" />
             </div>
           </div>
         </div>
@@ -77,7 +77,7 @@
                 <td>{{ user.email }}</td>
                 <td>{{ user.phone }}</td>
                 <td class="actions-cell">
-                  <button class="action-btn" :title="$t('common.edit')" @click="openEditUserModal(user)">
+                  <button class="action-btn" :title="$t('common.edit')" @click="userModal.openEdit(user)">
                     <svg width="24" height="24" viewBox="0 0 20 20" fill="none">
                       <path d="M4 13.5V16h2.5l7.06-7.06-2.5-2.5L4 13.5z" stroke="#42b883" stroke-width="1.5"
                         fill="none" />
@@ -115,75 +115,55 @@ import { UserDto, CreateUserDto, UpdateUserDto } from '../types/user'
 import { PagedResult } from '../types/api'
 import UserForm from '../components/UserForm.vue'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
-import { useToast } from 'vue-toastification'
 import { useI18n } from 'vue-i18n'
+import { useModal } from '../composables/useModal'
+import { useConfirmDialog } from '../composables/useConfirmDialog'
+import { useCrud } from '../composables/useCrud'
 
 const { t } = useI18n()
-const toast = useToast()
 
+// Pagination state
 const pagedResult = ref<PagedResult<UserDto> | null>(null)
 const loading = ref(true)
 const error = ref<string | null>(null)
 const page = ref(1)
 const pageSize = ref(5)
 
-// Confirm dialog state
-const showConfirmDialog = ref(false)
-const confirmMessage = ref('')
-const userToDelete = ref<UserDto | null>(null)
+// Modal management
+const userModal = useModal<UserDto>()
 
-// User modal state
-const showUserModal = ref(false)
-const userModalMode = ref<'create' | 'edit'>('create')
-const selectedUser = ref<UserDto | null>(null)
+// Confirm dialog management
+const confirmDialog = useConfirmDialog()
+
+// CRUD operations
+const userCrud = useCrud<UserDto, CreateUserDto, UpdateUserDto>(
+  {
+    create: createUser,
+    update: updateUser,
+    delete: deleteUser
+  },
+  {
+    created: 'users.created',
+    updated: 'users.updated',
+    deleted: 'users.deleted',
+    errorCreating: 'users.errorCreating',
+    errorUpdating: 'users.errorUpdating',
+    errorDeleting: 'users.errorDeleting'
+  },
+  fetchUsers
+)
 
 function showDeleteConfirm(user: UserDto) {
-  userToDelete.value = user
-  confirmMessage.value = `${t('users.confirmDelete', { name: user.firstName + ' ' + user.lastName })}`
-  showConfirmDialog.value = true
+  const message = t('users.confirmDelete', { name: `${user.firstName} ${user.lastName}` })
+  confirmDialog.show(message, user, () => handleDelete(user))
 }
 
-async function confirmDeleteUser() {
-  if (!userToDelete.value) return
-  try {
-    loading.value = true
-    error.value = null
-    await deleteUser(userToDelete.value.id)
-    toast.success(t('users.deleted'))
-    fetchUsers()
-  } catch (e: any) {
-    error.value = e.message || t('users.errorDeleting')
-  } finally {
-    loading.value = false
-    showConfirmDialog.value = false
-    userToDelete.value = null
-  }
-}
-
-function cancelDeleteUser() {
-  showConfirmDialog.value = false
-  userToDelete.value = null
-}
-
-function openUserModal() {
-  userModalMode.value = 'create'
-  selectedUser.value = null
-  showUserModal.value = true
-}
-
-function openEditUserModal(user: UserDto) {
-  userModalMode.value = 'edit'
-  selectedUser.value = user
-  showUserModal.value = true
-}
-
-function closeUserModal() {
-  showUserModal.value = false
-  selectedUser.value = null
+async function handleDelete(user: UserDto) {
+  await userCrud.remove(user.id)
 }
 
 function handleUserFormSubmit(dto: UpdateUserDto | CreateUserDto) {
-  if (userModalMode.value === 'edit') {
+  if (userModal.mode.value === 'edit' && userModal.selectedItem.value) {
     handleEditUser(dto as UpdateUserDto)
   } else {
     handleCreateUser(dto as CreateUserDto)
@@ -191,36 +171,16 @@ function handleUserFormSubmit(dto: UpdateUserDto | CreateUserDto) {
 }
 
 async function handleEditUser(dto: UpdateUserDto) {
-  try {
-    loading.value = true
-    error.value = null
-    await updateUser(dto.id, dto)
-    toast.success(t('users.updated'))
-    closeUserModal()
-    fetchUsers()
-  } catch (e: any) {
-    error.value = e.message || t('users.errorUpdating')
-  } finally {
-    loading.value = false
-  }
+  await userCrud.update(dto.id, dto)
+  userModal.close()
 }
 
 async function handleCreateUser(dto: CreateUserDto) {
-  try {
-    loading.value = true
-    error.value = null
-    await createUser(dto)
-    toast.success(t('users.created'))
-    closeUserModal()
-    fetchUsers()
-  } catch (e: any) {
-    error.value = e.message || t('users.errorCreating')
-  } finally {
-    loading.value = false
-  }
+  await userCrud.create(dto)
+  userModal.close()
 }
 
-const fetchUsers = async () => {
+async function fetchUsers() {
   loading.value = true
   error.value = null
   try {
@@ -237,7 +197,7 @@ const fetchUsers = async () => {
   }
 }
 
-const goToPage = (p: number) => {
+function goToPage(p: number) {
   if (pagedResult.value && p >= 1 && p <= pagedResult.value.totalPages) {
     page.value = p
     fetchUsers()

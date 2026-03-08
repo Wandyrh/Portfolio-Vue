@@ -10,7 +10,7 @@
         </span>
         {{ $t('productCategories.title') }}
       </h2>
-      <button class="add-entity-btn" @click="openCategoryModal">
+      <button class="add-entity-btn" @click="categoryModal.openCreate()">
         <span class="icon-plus" aria-hidden="true">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
             <circle cx="12" cy="12" r="10" fill="#42b883" />
@@ -25,36 +25,36 @@
 
     <!-- Confirm Dialog -->
     <ConfirmDialog
-      :show="showConfirmDialog"
+      :show="confirmDialog.isOpen.value"
       :title="$t('productCategories.deleteCategory')"
-      :message="confirmMessage"
-      @confirm="confirmDeleteCategory"
-      @cancel="cancelDeleteCategory"
+      :message="confirmDialog.message.value"
+      @confirm="confirmDialog.confirm"
+      @cancel="confirmDialog.cancel"
     />
-    <div v-if="showCategoryModal">
+    <div v-if="categoryModal.isOpen.value">
       <div class="modal-backdrop fade show custom-modal-backdrop"></div>
       <div class="modal fade show" tabindex="-1" style="display: block;">
         <div class="modal-dialog modal-dialog-centered">
           <div class="modal-content">
             <div class="modal-header">
               <h5 class="modal-title">
-                {{ categoryModalMode === 'edit' ? $t('productCategories.editCategory') : $t('productCategories.addCategory') }}
+                {{ categoryModal.mode.value === 'edit' ? $t('productCategories.editCategory') : $t('productCategories.addCategory') }}
               </h5>
-              <button type="button" class="btn-close" @click="closeCategoryModal"></button>
+              <button type="button" class="btn-close" @click="categoryModal.close"></button>
             </div>
             <div class="modal-body">
               <ProductCategoryForm
-                :mode="categoryModalMode"
-                :category="categoryModalMode === 'edit' ? selectedCategory : null"
-                :initial-values="categoryModalMode === 'edit' && selectedCategory ? {
-                  name: selectedCategory.name,
-                  description: selectedCategory.description
+                :mode="categoryModal.mode.value"
+                :category="categoryModal.mode.value === 'edit' ? categoryModal.selectedItem.value : null"
+                :initial-values="categoryModal.mode.value === 'edit' && categoryModal.selectedItem.value ? {
+                  name: categoryModal.selectedItem.value.name,
+                  description: categoryModal.selectedItem.value.description
                 } : {
                   name: '',
                   description: ''
                 }"
                 @submit="handleCategoryFormSubmit"
-                @cancel="closeCategoryModal"
+                @cancel="categoryModal.close"
               />
             </div>
           </div>
@@ -78,7 +78,7 @@
                 <td>{{ category.name }}</td>
                 <td>{{ category.description }}</td>
                 <td class="actions-cell">
-                  <button class="action-btn" :title="$t('common.edit')" @click="openEditCategoryModal(category)">
+                  <button class="action-btn" :title="$t('common.edit')" @click="categoryModal.openEdit(category)">
                     <svg width="24" height="24" viewBox="0 0 20 20" fill="none">
                       <path d="M4 13.5V16h2.5l7.06-7.06-2.5-2.5L4 13.5z" stroke="#42b883" stroke-width="1.5" fill="none" />
                       <path d="M14.06 6.44l1.5-1.5a1.5 1.5 0 0 1 2.12 2.12l-1.5 1.5-2.12-2.12z" stroke="#42b883" stroke-width="1.5" fill="none" />
@@ -117,116 +117,27 @@ import {
 import { ProductCategoryDto, CreateProductCategoryDto, UpdateProductCategoryDto } from '../types/productCategory'
 import ProductCategoryForm from '../components/ProductCategoryForm.vue'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
-import { useToast } from 'vue-toastification'
-
-interface PagedResult<T> {
-  items: T[]
-  totalPages: number
-  totalItems: number
-}
+import { PagedResult } from '../types/api'
+import { useModal } from '../composables/useModal'
+import { useConfirmDialog } from '../composables/useConfirmDialog'
+import { useCrud } from '../composables/useCrud'
 
 const { t } = useI18n()
-const toast = useToast()
 
+// Pagination state
 const pagedResult = ref<PagedResult<ProductCategoryDto> | null>(null)
 const loading = ref(true)
 const error = ref<string | null>(null)
 const page = ref(1)
 const pageSize = ref(5)
 
-// Confirm dialog state
-const showConfirmDialog = ref(false)
-const confirmMessage = ref('')
-const categoryToDelete = ref<ProductCategoryDto | null>(null)
+// Modal management
+const categoryModal = useModal<ProductCategoryDto>()
 
-// Category modal state
-const showCategoryModal = ref(false)
-const categoryModalMode = ref<'create' | 'edit'>('create')
-const selectedCategory = ref<ProductCategoryDto | null>(null)
+// Confirm dialog management
+const confirmDialog = useConfirmDialog()
 
-function showDeleteConfirm(category: ProductCategoryDto) {
-  categoryToDelete.value = category
-  confirmMessage.value = t('productCategories.confirmDelete', { name: category.name })
-  showConfirmDialog.value = true
-}
-
-async function confirmDeleteCategory() {
-  if (!categoryToDelete.value) return
-  try {
-    loading.value = true
-    error.value = null
-    await deleteProductCategory(categoryToDelete.value.id)
-    toast.success(t('productCategories.deleted'))
-    fetchCategories()
-  } catch (e: any) {
-    error.value = e.message || t('productCategories.errorDeleting')
-  } finally {
-    loading.value = false
-    showConfirmDialog.value = false
-    categoryToDelete.value = null
-  }
-}
-
-function cancelDeleteCategory() {
-  showConfirmDialog.value = false
-  categoryToDelete.value = null
-}
-
-function openCategoryModal() {
-  categoryModalMode.value = 'create'
-  selectedCategory.value = null
-  showCategoryModal.value = true
-}
-
-function openEditCategoryModal(category: ProductCategoryDto) {
-  categoryModalMode.value = 'edit'
-  selectedCategory.value = category
-  showCategoryModal.value = true
-}
-
-function closeCategoryModal() {
-  showCategoryModal.value = false
-  selectedCategory.value = null
-}
-
-function handleCategoryFormSubmit(dto: UpdateProductCategoryDto | CreateProductCategoryDto) {
-  if (categoryModalMode.value === 'edit') {
-    handleEditCategory(dto as UpdateProductCategoryDto)
-  } else {
-    handleCreateCategory(dto as CreateProductCategoryDto)
-  }
-}
-
-async function handleEditCategory(dto: UpdateProductCategoryDto) {
-  try {
-    loading.value = true
-    error.value = null
-    await updateProductCategory(dto.id, dto)
-    toast.success(t('productCategories.updated'))
-    closeCategoryModal()
-    fetchCategories()
-  } catch (e: any) {
-    error.value = e.message || t('productCategories.errorUpdating')
-  } finally {
-    loading.value = false
-  }
-}
-
-async function handleCreateCategory(dto: CreateProductCategoryDto) {
-  try {
-    loading.value = true
-    error.value = null
-    await createProductCategory(dto)
-    toast.success(t('productCategories.created'))
-    closeCategoryModal()
-    fetchCategories()
-  } catch (e: any) {
-    error.value = e.message || t('productCategories.errorCreating')
-  } finally {
-    loading.value = false
-  }
-}
-
+// Pagination fetch function
 const fetchCategories = async () => {
   loading.value = true
   error.value = null
@@ -242,6 +153,42 @@ const fetchCategories = async () => {
     error.value = e.message || t('productCategories.errorLoading')
   } finally {
     loading.value = false
+  }
+}
+
+// CRUD operations
+const categoryCrud = useCrud<ProductCategoryDto, CreateProductCategoryDto, UpdateProductCategoryDto>(
+  {
+    create: createProductCategory,
+    update: updateProductCategory,
+    delete: deleteProductCategory
+  },
+  {
+    created: 'productCategories.created',
+    updated: 'productCategories.updated',
+    deleted: 'productCategories.deleted',
+    errorCreating: 'productCategories.errorCreating',
+    errorUpdating: 'productCategories.errorUpdating',
+    errorDeleting: 'productCategories.errorDeleting'
+  },
+  fetchCategories
+)
+
+function showDeleteConfirm(category: ProductCategoryDto) {
+  confirmDialog.show(
+    t('productCategories.confirmDelete', { name: category.name }),
+    category,
+    () => categoryCrud.remove(category.id)
+  )
+}
+
+function handleCategoryFormSubmit(dto: UpdateProductCategoryDto | CreateProductCategoryDto) {
+  if (categoryModal.mode.value === 'edit' && categoryModal.selectedItem.value) {
+    categoryCrud.update(categoryModal.selectedItem.value.id, dto as UpdateProductCategoryDto)
+    categoryModal.close()
+  } else {
+    categoryCrud.create(dto as CreateProductCategoryDto)
+    categoryModal.close()
   }
 }
 
