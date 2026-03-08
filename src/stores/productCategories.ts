@@ -8,15 +8,16 @@ import {
   updateProductCategory,
   deleteProductCategory
 } from '@/services/productCategoryService'
+import { useErrorHandler } from '@/composables/useErrorHandler'
 
 export const useProductCategoriesStore = defineStore('productCategories', () => {
-  // State
   const pagedResult = ref<PagedResult<ProductCategoryDto> | null>(null)
   const loading = ref(false)
   const error = ref<string | null>(null)
   const page = ref(1)
   const pageSize = ref(5)
 
+  const { handleError } = useErrorHandler()
   // Getters
   const categories = computed(() => pagedResult.value?.items || [])
   const totalPages = computed(() => pagedResult.value?.totalPages || 0)
@@ -33,27 +34,46 @@ export const useProductCategoriesStore = defineStore('productCategories', () => 
         pagedResult.value = result.data
       } else {
         error.value = result.message || 'Failed to load categories'
+        handleError(new Error(error.value), { 
+          showToast: false
+        })
       }
     } catch (e: any) {
       error.value = e.message || 'Error loading categories'
+      handleError(e)
     } finally {
       loading.value = false
     }
   }
 
   async function create(dto: CreateProductCategoryDto) {
-    await createProductCategory(dto)
-    await fetchCategories()
+    try {
+      await createProductCategory(dto)
+      await fetchCategories()
+    } catch (e: any) {
+      handleError(e)
+      throw e
+    }
   }
 
   async function update(id: string, dto: UpdateProductCategoryDto) {
-    await updateProductCategory(id, dto)
-    await fetchCategories()
+    try {
+      await updateProductCategory(id, dto)
+      await fetchCategories()
+    } catch (e: any) {
+      handleError(e)
+      throw e
+    }
   }
 
   async function remove(id: string) {
-    await deleteProductCategory(id)
-    await fetchCategories()
+    try {
+      await deleteProductCategory(id)
+      await fetchCategories()
+    } catch (e: any) {
+      handleError(e)
+      throw e
+    }
   }
 
   function goToPage(p: number) {
