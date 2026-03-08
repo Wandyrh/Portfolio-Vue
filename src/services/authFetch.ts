@@ -1,5 +1,4 @@
 import { getToken } from './tokenService';
-import { logout } from './authService';
 import router from '../router/index';
 
 export async function authFetch(input: RequestInfo, init: RequestInit = {}): Promise<Response> {
@@ -10,7 +9,10 @@ export async function authFetch(input: RequestInfo, init: RequestInit = {}): Pro
   }
   const response = await fetch(input, { ...init, headers });
   if (response.status === 401 || response.status === 403) {
-    logout();
+    // Import dynamically to avoid circular dependency
+    const { useAuthStore } = await import('../stores/auth');
+    const authStore = useAuthStore();
+    authStore.logout();
     router.push('/login');
   }
   return response;

@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
-import { isAuthenticated } from '../services/tokenService';
+import { useAuthStore } from '../stores/auth';
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -48,7 +48,11 @@ const router = createRouter({
 // Navigation guard for authentication
 router.beforeEach((to, _from, next) => {
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
-  const authenticated = isAuthenticated();
+  
+  // Initialize auth store
+  const authStore = useAuthStore();
+  authStore.checkAuth();
+  const authenticated = authStore.isAuthenticated;
 
   if (requiresAuth && !authenticated) {
     // Save the intended destination to redirect after login
