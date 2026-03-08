@@ -11,7 +11,7 @@
         </span>
         {{ $t('products.title') }}
       </h2>
-      <button class="add-entity-btn" @click="openProductModal">
+      <button class="add-entity-btn" @click="productModal.openCreate()">
         <span class="icon-plus" aria-hidden="true">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
             <circle cx="12" cy="12" r="10" fill="#42b883" />
@@ -25,38 +25,38 @@
     <div v-else-if="error" class="error">{{ error }}</div>
 
     <ConfirmDialog
-      :show="showConfirmDialog"
+      :show="confirmDialog.isOpen.value"
       :title="$t('products.deleteProduct')"
-      :message="confirmMessage"
-      @confirm="confirmDeleteProduct"
-      @cancel="cancelDeleteProduct"
+      :message="confirmDialog.message.value"
+      @confirm="confirmDialog.confirm"
+      @cancel="confirmDialog.cancel"
     />
-    <div v-if="showProductModal">
+    <div v-if="productModal.isOpen.value">
       <div class="modal-backdrop fade show custom-modal-backdrop"></div>
       <div class="modal fade show" tabindex="-1" style="display: block;">
         <div class="modal-dialog modal-dialog-centered">
           <div class="modal-content">
             <div class="modal-header">
               <h5 class="modal-title">
-                {{ productModalMode === 'edit' ? $t('products.editProduct') : $t('products.addProduct') }}
+                {{ productModal.mode.value === 'edit' ? $t('products.editProduct') : $t('products.addProduct') }}
               </h5>
-              <button type="button" class="btn-close" @click="closeProductModal"></button>
+              <button type="button" class="btn-close" @click="productModal.close()"></button>
             </div>
             <div class="modal-body">
               <ProductForm
-                :mode="productModalMode"
-                :product="productModalMode === 'edit' ? selectedProduct : null"
-                :initial-values="productModalMode === 'edit' && selectedProduct ? {
-                  categoryId: selectedProduct.categoryId,
-                  name: selectedProduct.name,
-                  description: selectedProduct.description
+                :mode="productModal.mode.value"
+                :product="productModal.mode.value === 'edit' ? productModal.selectedItem.value : null"
+                :initial-values="productModal.mode.value === 'edit' && productModal.selectedItem.value ? {
+                  categoryId: productModal.selectedItem.value.categoryId,
+                  name: productModal.selectedItem.value.name,
+                  description: productModal.selectedItem.value.description
                 } : {
                   categoryId: '',
                   name: '',
                   description: ''
                 }"
                 @submit="handleProductFormSubmit"
-                @cancel="closeProductModal"
+                @cancel="productModal.close"
               />
             </div>
           </div>
@@ -82,7 +82,7 @@
                 <td>{{ product.description }}</td>
                 <td>{{ product.categoryName }}</td>
                 <td class="actions-cell">
-                  <button class="action-btn" :title="$t('common.edit')" @click="openEditProductModal(product)">
+                  <button class="action-btn" :title="$t('common.edit')" @click="productModal.openEdit(product)">
                     <svg width="24" height="24" viewBox="0 0 20 20" fill="none">
                       <path d="M4 13.5V16h2.5l7.06-7.06-2.5-2.5L4 13.5z" stroke="#42b883" stroke-width="1.5" fill="none" />
                       <path d="M14.06 6.44l1.5-1.5a1.5 1.5 0 0 1 2.12 2.12l-1.5 1.5-2.12-2.12z" stroke="#42b883" stroke-width="1.5" fill="none" />
@@ -121,75 +121,55 @@ import {
 import { ProductDto, CreateProductDto, UpdateProductDto } from '../types/product'
 import ProductForm from '../components/ProductForm.vue'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
-import { useToast } from 'vue-toastification'
 import { PagedResult } from '../types/api'
+import { useModal } from '../composables/useModal'
+import { useConfirmDialog } from '../composables/useConfirmDialog'
+import { useCrud } from '../composables/useCrud'
 
 const { t } = useI18n()
-const toast = useToast()
 
+// Pagination state
 const pagedResult = ref<PagedResult<ProductDto> | null>(null)
 const loading = ref(true)
 const error = ref<string | null>(null)
 const page = ref(1)
 const pageSize = ref(5)
 
-// Confirm dialog state
-const showConfirmDialog = ref(false)
-const confirmMessage = ref('')
-const productToDelete = ref<ProductDto | null>(null)
+// Modal management
+const productModal = useModal<ProductDto>()
 
-// Product modal state
-const showProductModal = ref(false)
-const productModalMode = ref<'create' | 'edit'>('create')
-const selectedProduct = ref<ProductDto | null>(null)
+// Confirm dialog management
+const confirmDialog = useConfirmDialog()
+
+// CRUD operations
+const productCrud = useCrud<ProductDto, CreateProductDto, UpdateProductDto>(
+  {
+    create: createProduct,
+    update: updateProduct,
+    delete: deleteProduct
+  },
+  {
+    created: 'products.created',
+    updated: 'products.updated',
+    deleted: 'products.deleted',
+    errorCreating: 'products.errorCreating',
+    errorUpdating: 'products.errorUpdating',
+    errorDeleting: 'products.errorDeleting'
+  },
+  fetchProducts
+)
 
 function showDeleteConfirm(product: ProductDto) {
-  productToDelete.value = product
-  confirmMessage.value = t('products.confirmDelete', { name: product.name })
-  showConfirmDialog.value = true
+  const message = t('products.confirmDelete', { name: product.name })
+  confirmDialog.show(message, product, () => handleDelete(product))
 }
 
-async function confirmDeleteProduct() {
-  if (!productToDelete.value) return
-  try {
-    loading.value = true
-    error.value = null
-    await deleteProduct(productToDelete.value.id)
-    toast.success(t('products.deleted'))
-    fetchProducts()
-  } catch (e: any) {
-    error.value = e.message || t('products.errorDeleting')
-  } finally {
-    loading.value = false
-    showConfirmDialog.value = false
-    productToDelete.value = null
-  }
-}
-
-function cancelDeleteProduct() {
-  showConfirmDialog.value = false
-  productToDelete.value = null
-}
-
-function openProductModal() {
-  productModalMode.value = 'create'
-  selectedProduct.value = null
-  showProductModal.value = true
-}
-
-function openEditProductModal(product: ProductDto) {
-  productModalMode.value = 'edit'
-  selectedProduct.value = product
-  showProductModal.value = true
-}
-
-function closeProductModal() {
-  showProductModal.value = false
-  selectedProduct.value = null
+async function handleDelete(product: ProductDto) {
+  await productCrud.remove(product.id)
 }
 
 function handleProductFormSubmit(dto: UpdateProductDto | CreateProductDto) {
-  if (productModalMode.value === 'edit') {
+  if (productModal.mode.value === 'edit' && productModal.selectedItem.value) {
     handleEditProduct(dto as UpdateProductDto)
   } else {
     handleCreateProduct(dto as CreateProductDto)
@@ -197,36 +177,16 @@ function handleProductFormSubmit(dto: UpdateProductDto | CreateProductDto) {
 }
 
 async function handleEditProduct(dto: UpdateProductDto) {
-  try {
-    loading.value = true
-    error.value = null
-    await updateProduct(dto.id, dto)
-    toast.success(t('products.updated'))
-    closeProductModal()
-    fetchProducts()
-  } catch (e: any) {
-    error.value = e.message || t('products.errorUpdating')
-  } finally {
-    loading.value = false
-  }
+  await productCrud.update(dto.id, dto)
+  productModal.close()
 }
 
 async function handleCreateProduct(dto: CreateProductDto) {
-  try {
-    loading.value = true
-    error.value = null
-    await createProduct(dto)
-    toast.success(t('products.created'))
-    closeProductModal()
-    fetchProducts()
-  } catch (e: any) {
-    error.value = e.message || t('products.errorCreating')
-  } finally {
-    loading.value = false
-  }
+  await productCrud.create(dto)
+  productModal.close()
 }
 
-const fetchProducts = async () => {
+async function fetchProducts() {
   loading.value = true
   error.value = null
   try {
@@ -244,7 +204,7 @@ const fetchProducts = async () => {
   }
 }
 
-const goToPage = (p: number) => {
+function goToPage(p: number) {
   if (pagedResult.value && p >= 1 && p <= pagedResult.value.totalPages) {
     page.value = p
     fetchProducts()
