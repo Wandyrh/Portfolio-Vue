@@ -20,8 +20,8 @@
         {{ $t('users.addUser') }}
       </button>
     </div>
-    <div v-if="loading">{{ $t('common.loading') }}</div>
-    <div v-else-if="error" class="error">{{ error }}</div>
+    <div v-if="usersStore.loading">{{ $t('common.loading') }}</div>
+    <div v-else-if="usersStore.error" class="error">{{ usersStore.error }}</div>
 
     <!-- User Modal -->
     <ConfirmDialog :show="confirmDialog.isOpen.value" :title="$t('users.deleteUser')" :message="confirmDialog.message.value" @confirm="confirmDialog.confirm"
@@ -71,7 +71,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="user in pagedResult?.items" :key="user.id" class="entity-row">
+              <tr v-for="user in usersStore.users" :key="user.id" class="entity-row">
                 <td>{{ user.firstName }}</td>
                 <td>{{ user.lastName }}</td>
                 <td>{{ user.email }}</td>
@@ -98,10 +98,10 @@
             </tbody>
           </table>
         </div>
-        <div class="pagination" v-if="pagedResult">
-          <button :disabled="page === 1" @click="goToPage(page - 1)">{{ $t('common.prev') }}</button>
-          <span>{{ $t('common.page') }} {{ page }} {{ $t('common.of') }} {{ pagedResult.totalPages }}</span>
-          <button :disabled="page === pagedResult.totalPages" @click="goToPage(page + 1)">{{ $t('common.next') }}</button>
+        <div class="pagination" v-if="usersStore.pagedResult">
+          <button :disabled="usersStore.page === 1" @click="usersStore.goToPage(usersStore.page - 1)">{{ $t('common.prev') }}</button>
+          <span>{{ $t('common.page') }} {{ usersStore.page }} {{ $t('common.of') }} {{ usersStore.totalPages }}</span>
+          <button :disabled="usersStore.page === usersStore.totalPages" @click="usersStore.goToPage(usersStore.page + 1)">{{ $t('common.next') }}</button>
         </div>
       </div>
     </template>
@@ -109,25 +109,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { getUsersPaged, createUser, updateUser, deleteUser } from '../services/userService'
+import { onMounted } from 'vue'
 import { UserDto, CreateUserDto, UpdateUserDto } from '../types/user'
-import { PagedResult } from '../types/api'
 import UserForm from '../components/UserForm.vue'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
 import { useI18n } from 'vue-i18n'
+import { useToast } from 'vue-toastification'
 import { useModal } from '../composables/useModal'
 import { useConfirmDialog } from '../composables/useConfirmDialog'
-import { useCrud } from '../composables/useCrud'
+import { useUsersStore } from '../stores/users'
 
 const { t } = useI18n()
-
-// Pagination state
-const pagedResult = ref<PagedResult<UserDto> | null>(null)
-const loading = ref(true)
-const error = ref<string | null>(null)
-const page = ref(1)
-const pageSize = ref(5)
+const toast = useToast()
+const usersStore = useUsersStore()
 
 // Modal management
 const userModal = useModal<UserDto>()
@@ -135,31 +129,18 @@ const userModal = useModal<UserDto>()
 // Confirm dialog management
 const confirmDialog = useConfirmDialog()
 
-// CRUD operations
-const userCrud = useCrud<UserDto, CreateUserDto, UpdateUserDto>(
-  {
-    create: createUser,
-    update: updateUser,
-    delete: deleteUser
-  },
-  {
-    created: 'users.created',
-    updated: 'users.updated',
-    deleted: 'users.deleted',
-    errorCreating: 'users.errorCreating',
-    errorUpdating: 'users.errorUpdating',
-    errorDeleting: 'users.errorDeleting'
-  },
-  fetchUsers
-)
-
 function showDeleteConfirm(user: UserDto) {
   const message = t('users.confirmDelete', { name: `${user.firstName} ${user.lastName}` })
   confirmDialog.show(message, user, () => handleDelete(user))
 }
 
 async function handleDelete(user: UserDto) {
-  await userCrud.remove(user.id)
+  try {
+    await usersStore.remove(user.id)
+    toast.success(t('users.deleted'))
+  } catch (e: any) {
+    toast.error(t('users.errorDeleting'))
+  }
 }
 
 function handleUserFormSubmit(dto: UpdateUserDto | CreateUserDto) {
@@ -171,38 +152,24 @@ function handleUserFormSubmit(dto: UpdateUserDto | CreateUserDto) {
 }
 
 async function handleEditUser(dto: UpdateUserDto) {
-  await userCrud.update(dto.id, dto)
-  userModal.close()
+  try {
+    await usersStore.update(dto.id, dto)
+    toast.success(t('users.updated'))
+    userModal.close()
+  } catch (e: any) {
+    toast.error(t('users.errorUpdating'))
+  }
 }
 
 async function handleCreateUser(dto: CreateUserDto) {
-  await userCrud.create(dto)
-  userModal.close()
-}
-
-async function fetchUsers() {
-  loading.value = true
-  error.value = null
   try {
-    const result = await getUsersPaged(page.value, pageSize.value)
-    if (result.success && result.data) {
-      pagedResult.value = result.data
-    } else {
-      error.value = result.message || t('users.failedToLoad')
-    }
+    await usersStore.create(dto)
+    toast.success(t('users.created'))
+    userModal.close()
   } catch (e: any) {
-    error.value = e.message || t('users.errorLoading')
-  } finally {
-    loading.value = false
+    toast.error(t('users.errorCreating'))
   }
 }
 
-function goToPage(p: number) {
-  if (pagedResult.value && p >= 1 && p <= pagedResult.value.totalPages) {
-    page.value = p
-    fetchUsers()
-  }
-}
-
-onMounted(fetchUsers)
+onMounted(usersStore.fetchUsers)
 </script>

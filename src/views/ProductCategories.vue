@@ -20,8 +20,8 @@
         {{ $t('productCategories.addCategory') }}
       </button>
     </div>
-    <div v-if="loading">{{ $t('common.loading') }}</div>
-    <div v-else-if="error" class="error">{{ error }}</div>
+    <div v-if="categoriesStore.loading">{{ $t('common.loading') }}</div>
+    <div v-else-if="categoriesStore.error" class="error">{{ categoriesStore.error }}</div>
 
     <!-- Confirm Dialog -->
     <ConfirmDialog
@@ -74,7 +74,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="category in pagedResult?.items" :key="category.id" class="entity-row">
+              <tr v-for="category in categoriesStore.categories" :key="category.id" class="entity-row">
                 <td>{{ category.name }}</td>
                 <td>{{ category.description }}</td>
                 <td class="actions-cell">
@@ -95,10 +95,10 @@
             </tbody>
           </table>
         </div>
-        <div class="pagination" v-if="pagedResult">
-          <button :disabled="page === 1" @click="goToPage(page - 1)">{{ $t('common.prev') }}</button>
-          <span>{{ $t('common.page') }} {{ page }} {{ $t('common.of') }} {{ pagedResult.totalPages }}</span>
-          <button :disabled="page === pagedResult.totalPages" @click="goToPage(page + 1)">{{ $t('common.next') }}</button>
+        <div class="pagination" v-if="categoriesStore.pagedResult">
+          <button :disabled="categoriesStore.page === 1" @click="categoriesStore.goToPage(categoriesStore.page - 1)">{{ $t('common.prev') }}</button>
+          <span>{{ $t('common.page') }} {{ categoriesStore.page }} {{ $t('common.of') }} {{ categoriesStore.totalPages }}</span>
+          <button :disabled="categoriesStore.page === categoriesStore.totalPages" @click="categoriesStore.goToPage(categoriesStore.page + 1)">{{ $t('common.next') }}</button>
         </div>
       </div>
     </template>
@@ -106,30 +106,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import {
-  getProductCategoriesPaged,
-  createProductCategory,
-  updateProductCategory,
-  deleteProductCategory
-} from '../services/productCategoryService'
+import { useToast } from 'vue-toastification'
 import { ProductCategoryDto, CreateProductCategoryDto, UpdateProductCategoryDto } from '../types/productCategory'
 import ProductCategoryForm from '../components/ProductCategoryForm.vue'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
-import { PagedResult } from '../types/api'
 import { useModal } from '../composables/useModal'
 import { useConfirmDialog } from '../composables/useConfirmDialog'
-import { useCrud } from '../composables/useCrud'
+import { useProductCategoriesStore } from '../stores/productCategories'
 
 const { t } = useI18n()
-
-// Pagination state
-const pagedResult = ref<PagedResult<ProductCategoryDto> | null>(null)
-const loading = ref(true)
-const error = ref<string | null>(null)
-const page = ref(1)
-const pageSize = ref(5)
+const toast = useToast()
+const categoriesStore = useProductCategoriesStore()
 
 // Modal management
 const categoryModal = useModal<ProductCategoryDto>()
@@ -137,67 +126,50 @@ const categoryModal = useModal<ProductCategoryDto>()
 // Confirm dialog management
 const confirmDialog = useConfirmDialog()
 
-// Pagination fetch function
-const fetchCategories = async () => {
-  loading.value = true
-  error.value = null
-  try {
-    const params = `page=${page.value}&pageSize=${pageSize.value}`
-    const result = await getProductCategoriesPaged(params)
-    if (result.success && result.data) {
-      pagedResult.value = result.data
-    } else {
-      error.value = result.message || t('productCategories.failedToLoad')
-    }
-  } catch (e: any) {
-    error.value = e.message || t('productCategories.errorLoading')
-  } finally {
-    loading.value = false
-  }
-}
-
-// CRUD operations
-const categoryCrud = useCrud<ProductCategoryDto, CreateProductCategoryDto, UpdateProductCategoryDto>(
-  {
-    create: createProductCategory,
-    update: updateProductCategory,
-    delete: deleteProductCategory
-  },
-  {
-    created: 'productCategories.created',
-    updated: 'productCategories.updated',
-    deleted: 'productCategories.deleted',
-    errorCreating: 'productCategories.errorCreating',
-    errorUpdating: 'productCategories.errorUpdating',
-    errorDeleting: 'productCategories.errorDeleting'
-  },
-  fetchCategories
-)
-
 function showDeleteConfirm(category: ProductCategoryDto) {
   confirmDialog.show(
     t('productCategories.confirmDelete', { name: category.name }),
     category,
-    () => categoryCrud.remove(category.id)
+    () => handleDelete(category)
   )
+}
+
+async function handleDelete(category: ProductCategoryDto) {
+  try {
+    await categoriesStore.remove(category.id)
+    toast.success(t('productCategories.deleted'))
+  } catch (e: any) {
+    toast.error(t('productCategories.errorDeleting'))
+  }
 }
 
 function handleCategoryFormSubmit(dto: UpdateProductCategoryDto | CreateProductCategoryDto) {
   if (categoryModal.mode.value === 'edit' && categoryModal.selectedItem.value) {
-    categoryCrud.update(categoryModal.selectedItem.value.id, dto as UpdateProductCategoryDto)
-    categoryModal.close()
+    handleEditCategory(dto as UpdateProductCategoryDto)
   } else {
-    categoryCrud.create(dto as CreateProductCategoryDto)
+    handleCreateCategory(dto as CreateProductCategoryDto)
+  }
+}
+
+async function handleEditCategory(dto: UpdateProductCategoryDto) {
+  try {
+    await categoriesStore.update(categoryModal.selectedItem.value!.id, dto)
+    toast.success(t('productCategories.updated'))
     categoryModal.close()
+  } catch (e: any) {
+    toast.error(t('productCategories.errorUpdating'))
   }
 }
 
-const goToPage = (p: number) => {
-  if (pagedResult.value && p >= 1 && p <= pagedResult.value.totalPages) {
-    page.value = p
-    fetchCategories()
+async function handleCreateCategory(dto: CreateProductCategoryDto) {
+  try {
+    await categoriesStore.create(dto)
+    toast.success(t('productCategories.created'))
+    categoryModal.close()
+  } catch (e: any) {
+    toast.error(t('productCategories.errorCreating'))
   }
 }
 
-onMounted(fetchCategories)
+onMounted(categoriesStore.fetchCategories)
 </script>
