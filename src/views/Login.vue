@@ -35,7 +35,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { Form, Field, ErrorMessage } from 'vee-validate'
 import * as yup from 'yup'
 import { login } from '../services/authService'
@@ -44,6 +44,7 @@ import LanguageSelector from '../components/LanguageSelector.vue'
 import { useI18n } from 'vue-i18n'
 
 const router = useRouter()
+const route = useRoute()
 const { t } = useI18n()
 
 const schema = yup.object({
@@ -72,7 +73,10 @@ const onSubmit = async (values: Record<string, any>) => {
     if (result.success && result.data) {
       setToken(result.data.accessToken)
       successMessage.value = t('login.success')
-      router.push('/users')
+      
+      // Redirect to the original intended destination or default to /users
+      const redirect = route.query.redirect as string
+      router.push(redirect || '/users')
     } else {
       errorMessage.value = result.message || t('login.error')
     }

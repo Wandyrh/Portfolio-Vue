@@ -77,6 +77,14 @@ export const useProductsStore = defineStore('products', () => {
     }
   }
 
+  function $reset() {
+    pagedResult.value = null
+    loading.value = false
+    error.value = null
+    page.value = 1
+    pageSize.value = 5
+  }
+
   return {
     // State
     pagedResult,
@@ -95,6 +103,7 @@ export const useProductsStore = defineStore('products', () => {
     remove,
     goToPage,
     nextPage,
-    prevPage
+    prevPage,
+    $reset
   }
 })

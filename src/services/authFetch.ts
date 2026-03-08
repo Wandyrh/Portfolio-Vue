@@ -1,4 +1,5 @@
-import { getToken, removeToken } from './tokenService';
+import { getToken } from './tokenService';
+import { logout } from './authService';
 import router from '../router/index';
 
 export async function authFetch(input: RequestInfo, init: RequestInit = {}): Promise<Response> {
@@ -9,7 +10,7 @@ export async function authFetch(input: RequestInfo, init: RequestInit = {}): Pro
   }
   const response = await fetch(input, { ...init, headers });
   if (response.status === 401 || response.status === 403) {
-    removeToken();
+    logout();
     router.push('/login');
   }
   return response;
