@@ -11,7 +11,7 @@ import { createPinia } from 'pinia'
 import { createI18n } from 'vue-i18n'
 import en from './locales/en.json'
 import es from './locales/es.json'
-import { ApiError } from './types/error'
+import { ApiError } from './shared/types/error'
 
 const pinia = createPinia()
 
