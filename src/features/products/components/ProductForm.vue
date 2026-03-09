@@ -1,27 +1,52 @@
 <template>
   <Form :key="mode + (product && product.id ? product.id : '')" @submit="onSubmit" :validation-schema="validationSchema"
-    :initial-values="initialValues" class="product-form">
+    :initial-values="initialValues" class="product-form" v-slot="{ errors, meta }">
     <div class="mb-3">
       <label for="categoryId" class="form-label">{{ $t('products.category') }}</label>
-      <Field as="select" name="categoryId" class="form-control" id="categoryId">
+      <Field 
+        as="select" 
+        name="categoryId" 
+        class="form-control" 
+        :class="{ 'is-invalid': errors.categoryId, 'is-valid': meta.touched && !errors.categoryId }"
+        id="categoryId"
+        :validate-on-blur="true"
+        :validate-on-change="true"
+      >
         <option value="">{{ $t('products.selectCategory') }}</option>
         <option v-for="cat in categories || []" :key="cat?.id" :value="cat?.id">{{ cat?.name }}</option>
       </Field>
-      <ErrorMessage name="categoryId" class="text-danger" />
+      <ErrorMessage name="categoryId" class="invalid-feedback" />
     </div>
     <div class="mb-3">
       <label for="name" class="form-label">{{ $t('products.name') }}</label>
-      <Field name="name" type="text" class="form-control" id="name" />
-      <ErrorMessage name="name" class="text-danger" />
+      <Field 
+        name="name" 
+        type="text" 
+        class="form-control" 
+        :class="{ 'is-invalid': errors.name, 'is-valid': meta.touched && !errors.name }"
+        id="name"
+        :validate-on-blur="true"
+        :validate-on-input="true"
+      />
+      <ErrorMessage name="name" class="invalid-feedback" />
     </div>
     <div class="mb-3">
       <label for="description" class="form-label">{{ $t('products.description') }}</label>
-      <Field name="description" type="text" class="form-control" id="description" />
-      <ErrorMessage name="description" class="text-danger" />
+      <Field 
+        name="description" 
+        as="textarea"
+        rows="3"
+        class="form-control" 
+        :class="{ 'is-invalid': errors.description, 'is-valid': meta.touched && !errors.description }"
+        id="description"
+        :validate-on-blur="true"
+        :validate-on-input="true"
+      />
+      <ErrorMessage name="description" class="invalid-feedback" />
     </div>
     <div class="d-flex justify-content-end gap-2 mt-4">
       <button type="button" class="btn btn-outline-secondary" @click="$emit('cancel')">{{ $t('common.cancel') }}</button>
-      <button type="submit" class="btn btn-success">
+      <button type="submit" class="btn btn-success" :disabled="!meta.valid">
         {{ mode === 'edit' ? $t('common.update') : $t('common.create') }}
       </button>
     </div>
@@ -36,6 +61,7 @@ import * as yup from 'yup'
 import { ProductDto, CreateProductDto, UpdateProductDto } from '../types/product'
 import { getProductCategories } from '@/features/categories/services/productCategoryService'
 import { ProductCategoryDto } from '@/features/categories/types/productCategory'
+import { useValidation } from '@/shared/composables/useValidation'
 
 type ProductFormMode = 'create' | 'edit'
 
@@ -60,6 +86,7 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const { requiredStringRule, selectRule, descriptionRule } = useValidation()
 const categories = ref<ProductCategoryDto[]>([])
 
 onMounted(async () => {
@@ -69,9 +96,9 @@ onMounted(async () => {
 
 const validationSchema = computed(() =>
   yup.object({
-    categoryId: yup.string().required(t('products.validation.categoryRequired')),
-    name: yup.string().required(t('products.validation.nameRequired')),
-    description: yup.string().required(t('products.validation.descriptionRequired')),
+    categoryId: selectRule(t('products.category')),
+    name: requiredStringRule(t('products.name')),
+    description: descriptionRule(),
   })
 )
 

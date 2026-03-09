@@ -1,19 +1,36 @@
 <template>
   <Form :key="mode + (category && category.id ? category.id : '')" @submit="onSubmit" :validation-schema="validationSchema"
-    :initial-values="initialValues" class="category-form">
+    :initial-values="initialValues" class="category-form" v-slot="{ errors, meta }">
     <div class="mb-3">
       <label for="name" class="form-label">{{ $t('productCategories.name') }}</label>
-      <Field name="name" type="text" class="form-control" id="name" />
-      <ErrorMessage name="name" class="text-danger" />
+      <Field 
+        name="name" 
+        type="text" 
+        class="form-control" 
+        :class="{ 'is-invalid': errors.name, 'is-valid': meta.touched && !errors.name }"
+        id="name"
+        :validate-on-blur="true"
+        :validate-on-input="true"
+      />
+      <ErrorMessage name="name" class="invalid-feedback" />
     </div>
     <div class="mb-3">
       <label for="description" class="form-label">{{ $t('productCategories.description') }}</label>
-      <Field name="description" type="text" class="form-control" id="description" />
-      <ErrorMessage name="description" class="text-danger" />
+      <Field 
+        name="description" 
+        as="textarea"
+        rows="3"
+        class="form-control" 
+        :class="{ 'is-invalid': errors.description, 'is-valid': meta.touched && !errors.description }"
+        id="description"
+        :validate-on-blur="true"
+        :validate-on-input="true"
+      />
+      <ErrorMessage name="description" class="invalid-feedback" />
     </div>
     <div class="d-flex justify-content-end gap-2 mt-4">
       <button type="button" class="btn btn-outline-secondary" @click="$emit('cancel')">{{ $t('common.cancel') }}</button>
-      <button type="submit" class="btn btn-success">
+      <button type="submit" class="btn btn-success" :disabled="!meta.valid">
         {{ mode === 'edit' ? $t('common.update') : $t('common.create') }}
       </button>
     </div>
@@ -26,6 +43,7 @@ import { useI18n } from 'vue-i18n'
 import { Form, Field, ErrorMessage } from 'vee-validate'
 import * as yup from 'yup'
 import { ProductCategoryDto, CreateProductCategoryDto, UpdateProductCategoryDto } from '../types/productCategory'
+import { useValidation } from '@/shared/composables/useValidation'
 
 type ProductCategoryFormMode = 'create' | 'edit'
 
@@ -49,11 +67,12 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const { requiredStringRule, descriptionRule } = useValidation()
 
 const validationSchema = computed(() =>
   yup.object({
-    name: yup.string().required(t('productCategories.validation.nameRequired')),
-    description: yup.string().required(t('productCategories.validation.descriptionRequired')),
+    name: requiredStringRule(t('productCategories.name')),
+    description: descriptionRule(),
   })
 )
 

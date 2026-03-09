@@ -108,7 +108,25 @@
   "cancel": "Cancelar",
   "update": "Actualizar",
   "create": "Crear",
-  "logout": "Cerrar sesión"
+  "logout": "Cerrar sesión",
+  "description": "Descripción"
+},
+"validation": {
+  "required": "{field} es requerido",
+  "emailRequired": "El correo electrónico es requerido",
+  "emailInvalid": "Por favor ingresa un correo electrónico válido",
+  "passwordRequired": "La contraseña es requerida",
+  "passwordMin": "La contraseña debe tener al menos {min} caracteres",
+  "passwordStrength": "La contraseña debe contener al menos una mayúscula, una minúscula y un número",
+  "phoneRequired": "El número de teléfono es requerido",
+  "phoneInvalid": "Por favor ingresa un número de teléfono válido",
+  "phoneMinLength": "El número de teléfono debe tener al menos 8 dígitos",
+  "phoneMaxLength": "El número de teléfono no puede exceder 20 caracteres",
+  "minLength": "{field} debe tener al menos {min} caracteres",
+  "maxLength": "{field} no puede exceder {max} caracteres",
+  "onlyLetters": "{field} debe contener solo letras",
+  "descriptionRequired": "La descripción es requerida",
+  "selectRequired": "Por favor selecciona un {field}"
 },
 "errors": {
   "network": "Error de conexión de red. Por favor verifica tu conexión a internet.",

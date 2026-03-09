@@ -10,20 +10,39 @@
             <h3>{{ $t('login.title') }}</h3>
           </div>
           <div class="card-body">
-            <Form @submit="onSubmit" :validation-schema="schema">
+            <Form @submit="onSubmit" :validation-schema="schema" v-slot="{ errors, meta }">
               <div v-if="errorMessage" class="alert alert-danger mb-3">{{ errorMessage }}</div>
               <div class="mb-3">
                 <label for="email" class="form-label text-start">{{ $t('login.email') }}</label>
-                <Field name="email" type="email" class="form-control" id="email" :placeholder="$t('login.email')" :disabled="loading" />
-                <ErrorMessage name="email" class="text-danger" />
+                <Field 
+                  name="email" 
+                  type="email" 
+                  class="form-control" 
+                  :class="{ 'is-invalid': errors.email, 'is-valid': meta.touched && !errors.email }"
+                  id="email" 
+                  :placeholder="$t('login.email')" 
+                  :disabled="loading"
+                  :validate-on-blur="true"
+                  :validate-on-input="true"
+                />
+                <ErrorMessage name="email" class="invalid-feedback" />
               </div>
               <div class="mb-3">
                 <label for="password" class="form-label text-start">{{ $t('login.password') }}</label>
-                <Field name="password" type="password" class="form-control" id="password"
-                  :placeholder="$t('login.password')" :disabled="loading" />
-                <ErrorMessage name="password" class="text-danger" />
+                <Field 
+                  name="password" 
+                  type="password" 
+                  class="form-control"
+                  :class="{ 'is-invalid': errors.password, 'is-valid': meta.touched && !errors.password }"
+                  id="password"
+                  :placeholder="$t('login.password')" 
+                  :disabled="loading"
+                  :validate-on-blur="true"
+                  :validate-on-input="true"
+                />
+                <ErrorMessage name="password" class="invalid-feedback" />
               </div>
-              <button type="submit" class="btn btn-primary w-100" :disabled="loading">
+              <button type="submit" class="btn btn-primary w-100" :disabled="loading || !meta.valid">
                 <span v-if="loading">{{ $t('common.loading') }}</span>
                 <span v-else>{{ $t('login.loginButton') }}</span>
               </button>
@@ -41,23 +60,17 @@ import { useRouter, useRoute } from 'vue-router'
 import { Form, Field, ErrorMessage } from 'vee-validate'
 import * as yup from 'yup'
 import LanguageSelector from '@/shared/components/LanguageSelector.vue'
-import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../store/auth'
+import { useValidation } from '@/shared/composables/useValidation'
 
 const router = useRouter()
 const route = useRoute()
-const { t } = useI18n()
 const authStore = useAuthStore()
+const { emailRule, passwordRuleSimple } = useValidation()
 
 const schema = yup.object({
-  email: yup
-    .string()
-    .email(t('login.validation.emailInvalid'))
-    .required(t('login.validation.emailRequired')),
-  password: yup
-    .string()
-    .min(6, t('login.validation.passwordMin'))
-    .required(t('login.validation.passwordRequired')),
+  email: emailRule(),
+  password: passwordRuleSimple(),
 })
 
 const errorMessage = computed(() => authStore.error)
