@@ -1,4 +1,6 @@
-const TOKEN_KEY = 'auth_token';
+import { env } from '@/shared/config/env'
+
+const TOKEN_KEY = env.auth.tokenStorageKey
 
 export function setToken(token: string) {
   sessionStorage.setItem(TOKEN_KEY, token);
