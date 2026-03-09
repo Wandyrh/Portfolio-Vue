@@ -104,10 +104,37 @@
   "next": "Next",
   "page": "Page",
   "of": "of",
-  "loading": "Loading...",
-  "cancel": "Cancel",
+  "loading": "Loading...",  "loadingData": "Loading data...",
+  "pleaseWait": "Please wait",  "cancel": "Cancel",
   "update": "Update",
   "create": "Create",
-  "logout": "Log out"
+  "logout": "Log out",
+  "description": "Description"
+},
+"validation": {
+  "required": "{field} is required",
+  "emailRequired": "Email is required",
+  "emailInvalid": "Please enter a valid email address",
+  "passwordRequired": "Password is required",
+  "passwordMin": "Password must be at least {min} characters",
+  "passwordStrength": "Password must contain at least one uppercase letter, one lowercase letter, and one number",
+  "phoneRequired": "Phone number is required",
+  "phoneInvalid": "Please enter a valid phone number",
+  "phoneMinLength": "Phone number must be at least 8 digits",
+  "phoneMaxLength": "Phone number cannot exceed 20 characters",
+  "minLength": "{field} must be at least {min} characters",
+  "maxLength": "{field} cannot exceed {max} characters",
+  "onlyLetters": "{field} must contain only letters",
+  "descriptionRequired": "Description is required",
+  "selectRequired": "Please select a {field}"
+},
+"errors": {
+  "network": "Network connection error. Please check your internet connection.",
+  "authentication": "Authentication required. Please log in again.",
+  "authorization": "Access denied. You don't have permission to access this resource.",
+  "validation": "Invalid data. Please check your input and try again.",
+  "not_found": "The requested resource was not found.",
+  "server": "A server error occurred. Please try again later.",
+  "unknown": "An unexpected error occurred. Please try again."
 }
 }
