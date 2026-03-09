@@ -1,9 +1,15 @@
 import { getToken } from './tokenService'
 import router from '@/router/index'
 import { createApiError, isNetworkError, ApiError } from '@/shared/types/error'
+import { useLoadingStore } from '@/shared/stores/loading'
 
 export async function authFetch(input: RequestInfo, init: RequestInit = {}): Promise<Response> {
+  const loadingStore = useLoadingStore()
+  
   try {
+    // Increment active requests counter
+    loadingStore.incrementRequests()
+    
     const token = getToken()
     const headers = new Headers(init.headers || {})
     
@@ -35,5 +41,8 @@ export async function authFetch(input: RequestInfo, init: RequestInit = {}): Pro
     }
     
     throw createApiError(500, 'An unexpected error occurred', error)
+  } finally {
+    // Always decrement active requests counter
+    loadingStore.decrementRequests()
   }
 }

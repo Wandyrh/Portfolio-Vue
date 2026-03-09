@@ -105,6 +105,8 @@
   "page": "Página",
   "of": "de",
   "loading": "Cargando...",
+  "loadingData": "Cargando datos...",
+  "pleaseWait": "Por favor espera",
   "cancel": "Cancelar",
   "update": "Actualizar",
   "create": "Crear",
