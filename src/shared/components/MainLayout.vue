@@ -1,5 +1,6 @@
 <template>
   <div class="main-layout">
+    <LoadingBar />
     <header class="header" style="display: flex; align-items: center; justify-content: space-between;">
       <div class="header-left" style="display: flex; align-items: center;">
         <img src="@/assets/logo.png" alt="Logo" style="height:52px; margin-right:12px; padding-top:14px;" />
@@ -33,6 +34,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/features/auth/store/auth'
 import AppSidebar from './Sidebar.vue'
 import LanguageSelector from './LanguageSelector.vue'
+import LoadingBar from './LoadingBar.vue'
 
 const showMenu = ref(false)
 const router = useRouter()

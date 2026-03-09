@@ -20,49 +20,17 @@
         {{ $t('productCategories.addCategory') }}
       </button>
     </div>
-    <div v-if="categoriesStore.loading">{{ $t('common.loading') }}</div>
+    
+    <!-- Loading State -->
+    <div v-if="categoriesStore.loading" class="entity-card">
+      <SkeletonTable :rows="5" :columns="3" />
+    </div>
+    
+    <!-- Error State -->
     <div v-else-if="categoriesStore.error" class="error">{{ categoriesStore.error }}</div>
 
-    <!-- Confirm Dialog -->
-    <ConfirmDialog
-      :show="confirmDialog.isOpen.value"
-      :title="$t('productCategories.deleteCategory')"
-      :message="confirmDialog.message.value"
-      @confirm="confirmDialog.confirm"
-      @cancel="confirmDialog.cancel"
-    />
-    <div v-if="categoryModal.isOpen.value">
-      <div class="modal-backdrop fade show custom-modal-backdrop"></div>
-      <div class="modal fade show" tabindex="-1" style="display: block;">
-        <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title">
-                {{ categoryModal.mode.value === 'edit' ? $t('productCategories.editCategory') : $t('productCategories.addCategory') }}
-              </h5>
-              <button type="button" class="btn-close" @click="categoryModal.close"></button>
-            </div>
-            <div class="modal-body">
-              <ProductCategoryForm
-                :mode="categoryModal.mode.value"
-                :category="categoryModal.mode.value === 'edit' ? categoryModal.selectedItem.value : null"
-                :initial-values="categoryModal.mode.value === 'edit' && categoryModal.selectedItem.value ? {
-                  name: categoryModal.selectedItem.value.name,
-                  description: categoryModal.selectedItem.value.description
-                } : {
-                  name: '',
-                  description: ''
-                }"
-                @submit="handleCategoryFormSubmit"
-                @cancel="categoryModal.close"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <template v-else>
+    <!-- Data Table -->
+    <div v-else>
       <div class="entity-card">
         <div class="table-responsive">
           <table class="table table-hover align-middle entity-table">
@@ -101,7 +69,46 @@
           <button :disabled="categoriesStore.page === categoriesStore.totalPages" @click="categoriesStore.goToPage(categoriesStore.page + 1)">{{ $t('common.next') }}</button>
         </div>
       </div>
-    </template>
+    </div>
+
+    <!-- Category Modal -->
+    <ConfirmDialog
+      :show="confirmDialog.isOpen.value"
+      :title="$t('productCategories.deleteCategory')"
+      :message="confirmDialog.message.value"
+      @confirm="confirmDialog.confirm"
+      @cancel="confirmDialog.cancel"
+    />
+    <div v-if="categoryModal.isOpen.value">
+      <div class="modal-backdrop fade show custom-modal-backdrop"></div>
+      <div class="modal fade show" tabindex="-1" style="display: block;">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">
+                {{ categoryModal.mode.value === 'edit' ? $t('productCategories.editCategory') : $t('productCategories.addCategory') }}
+              </h5>
+              <button type="button" class="btn-close" @click="categoryModal.close"></button>
+            </div>
+            <div class="modal-body">
+              <ProductCategoryForm
+                :mode="categoryModal.mode.value"
+                :category="categoryModal.mode.value === 'edit' ? categoryModal.selectedItem.value : null"
+                :initial-values="categoryModal.mode.value === 'edit' && categoryModal.selectedItem.value ? {
+                  name: categoryModal.selectedItem.value.name,
+                  description: categoryModal.selectedItem.value.description
+                } : {
+                  name: '',
+                  description: ''
+                }"
+                @submit="handleCategoryFormSubmit"
+                @cancel="categoryModal.close"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -112,6 +119,7 @@ import { useToast } from 'vue-toastification'
 import { ProductCategoryDto, CreateProductCategoryDto, UpdateProductCategoryDto } from '../types/productCategory'
 import ProductCategoryForm from '../components/ProductCategoryForm.vue'
 import ConfirmDialog from '@/shared/components/ConfirmDialog.vue'
+import SkeletonTable from '@/shared/components/SkeletonTable.vue'
 import { useModal } from '@/shared/composables/useModal'
 import { useConfirmDialog } from '@/shared/composables/useConfirmDialog'
 import { useProductCategoriesStore } from '../store/productCategories'

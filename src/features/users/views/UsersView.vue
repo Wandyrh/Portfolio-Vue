@@ -20,44 +20,17 @@
         {{ $t('users.addUser') }}
       </button>
     </div>
-    <div v-if="usersStore.loading">{{ $t('common.loading') }}</div>
+    
+    <!-- Loading State -->
+    <div v-if="usersStore.loading" class="entity-card">
+      <SkeletonTable :rows="5" :columns="5" />
+    </div>
+    
+    <!-- Error State -->
     <div v-else-if="usersStore.error" class="error">{{ usersStore.error }}</div>
 
-    <!-- User Modal -->
-    <ConfirmDialog :show="confirmDialog.isOpen.value" :title="$t('users.deleteUser')" :message="confirmDialog.message.value" @confirm="confirmDialog.confirm"
-      @cancel="confirmDialog.cancel" />
-    <div v-if="userModal.isOpen.value">
-      <div class="modal-backdrop fade show custom-modal-backdrop"></div>
-      <div class="modal fade show" tabindex="-1" style="display: block;">
-        <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title">
-                {{ userModal.mode.value === 'edit' ? $t('users.editUser') : $t('users.addUser') }}
-              </h5>
-              <button type="button" class="btn-close" @click="userModal.close()"></button>
-            </div>
-            <div class="modal-body">
-              <UserForm :mode="userModal.mode.value" :user="userModal.mode.value === 'edit' ? userModal.selectedItem.value : null" :initial-values="userModal.mode.value === 'edit' && userModal.selectedItem.value ? {
-                firstName: userModal.selectedItem.value.firstName,
-                lastName: userModal.selectedItem.value.lastName,
-                email: userModal.selectedItem.value.email,
-                phone: userModal.selectedItem.value.phone,
-                password: ''
-              } : {
-                firstName: '',
-                lastName: '',
-                email: '',
-                phone: '',
-                password: ''
-              }" @submit="handleUserFormSubmit" @cancel="userModal.close()" />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <template v-else>
+    <!-- Data Table -->
+    <div v-else>
       <div class="entity-card">
         <div class="table-responsive">
           <table class="table table-hover align-middle entity-table">
@@ -104,7 +77,41 @@
           <button :disabled="usersStore.page === usersStore.totalPages" @click="usersStore.goToPage(usersStore.page + 1)">{{ $t('common.next') }}</button>
         </div>
       </div>
-    </template>
+    </div>
+
+    <!-- User Modal -->
+    <ConfirmDialog :show="confirmDialog.isOpen.value" :title="$t('users.deleteUser')" :message="confirmDialog.message.value" @confirm="confirmDialog.confirm"
+      @cancel="confirmDialog.cancel" />
+    <div v-if="userModal.isOpen.value">
+      <div class="modal-backdrop fade show custom-modal-backdrop"></div>
+      <div class="modal fade show" tabindex="-1" style="display: block;">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">
+                {{ userModal.mode.value === 'edit' ? $t('users.editUser') : $t('users.addUser') }}
+              </h5>
+              <button type="button" class="btn-close" @click="userModal.close()"></button>
+            </div>
+            <div class="modal-body">
+              <UserForm :mode="userModal.mode.value" :user="userModal.mode.value === 'edit' ? userModal.selectedItem.value : null" :initial-values="userModal.mode.value === 'edit' && userModal.selectedItem.value ? {
+                firstName: userModal.selectedItem.value.firstName,
+                lastName: userModal.selectedItem.value.lastName,
+                email: userModal.selectedItem.value.email,
+                phone: userModal.selectedItem.value.phone,
+                password: ''
+              } : {
+                firstName: '',
+                lastName: '',
+                email: '',
+                phone: '',
+                password: ''
+              }" @submit="handleUserFormSubmit" @cancel="userModal.close()" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -113,6 +120,7 @@ import { onMounted } from 'vue'
 import { UserDto, CreateUserDto, UpdateUserDto } from '../types/user'
 import UserForm from '../components/UserForm.vue'
 import ConfirmDialog from '@/shared/components/ConfirmDialog.vue'
+import SkeletonTable from '@/shared/components/SkeletonTable.vue'
 import { useI18n } from 'vue-i18n'
 import { useToast } from 'vue-toastification'
 import { useModal } from '@/shared/composables/useModal'
