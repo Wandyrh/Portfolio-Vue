@@ -64,11 +64,59 @@ For full API details, see the backend repository: [Clean Architecture .NET API](
 
 ## Environment Configuration
 
-Set your API base URL and other environment variables in the `.env` file:
+This project uses a type-safe environment variable system with support for multiple deployment environments.
 
-```env
-VUE_APP_API_URL=https://your-api-url.com
+### Quick Setup
+
+1. Copy the example file to create your local configuration:
+```bash
+cp .env.example .env.local
 ```
+
+2. Edit `.env.local` with your settings:
+```env
+VITE_API_URL=http://localhost:5174/api/v1
+VITE_APP_NAME=Portfolio Vue
+```
+
+### Available Environments
+
+- **Development** (`.env.development`): Local development with debug tools
+- **Staging** (`.env.staging`): Pre-production testing environment
+- **Production** (`.env.production`): Live production environment
+
+### Build Commands
+
+```bash
+# Development
+npm run dev              # Uses .env.development
+npm run dev:staging      # Uses .env.staging
+
+# Production builds
+npm run build            # Uses .env.production
+npm run build:staging    # Uses .env.staging
+npm run build:production # Uses .env.production (explicit)
+```
+
+### Type-Safe Configuration
+
+All environment variables are validated and type-safe:
+
+```typescript
+import { env } from '@/shared/config/env'
+
+// Type-safe access with IntelliSense
+const apiUrl = env.api.url           // string
+const timeout = env.api.timeout      // number
+const debug = env.features.debug     // boolean
+
+// Environment checks
+if (env.isDevelopment) {
+  console.log('Running in dev mode')
+}
+```
+
+For detailed documentation, see [ENV_VARIABLES.md](./ENV_VARIABLES.md).
 
 ---
 
